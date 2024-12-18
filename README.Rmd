@@ -18,20 +18,20 @@ knitr::opts_chunk$set(
 <!-- badges: start -->
 <!-- badges: end -->
 
-The goal of prinsurf is to ...
+The goal of prinsurf is to construct a principal surfaces to a $p$-dimensional dataset. 
 
 ## Installation
 
 You can install the development version of prinsurf from [GitHub](https://github.com/) with:
 
 ``` r
-# install.packages("devtools")
+library(devtools)
 devtools::install_github("RaeesaGaney91/prinsurf")
 ```
 
 ## Example
 
-This is a basic example which shows you how to solve a common problem:
+This is a basic example:
 
 ```{r example}
 library(prinsurf)
