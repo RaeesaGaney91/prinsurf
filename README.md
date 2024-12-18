@@ -1,2 +1,2 @@
-# princsurf
+# prinsurf
 Principal Surfaces R package
