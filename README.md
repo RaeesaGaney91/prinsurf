@@ -6,7 +6,7 @@
 <!-- badges: start -->
 <!-- badges: end -->
 
-The goal of prinsurf is to construct a principal surfaces to a
+The goal of prinsurf is to construct a principal surface to a
 $p$-dimensional dataset.
 
 ## Installation
