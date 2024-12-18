@@ -1,27 +1,30 @@
 
 #' Principal Surfaces
 #'
-#' @param X data of size n x p
-#' @param max.iter maximum number of iterations in the principal surface algorithm if the algorithm does not converge.
+#' @param X data containing continuous variables
+#' @param max.iter maximum number of iterations in the principal surface algorithm.
 #' @param alpha span argument in loess() function
 #' @param N creates an N^2 x p interpolated grid surface
 #'
 #' @return
-#' \item{X}{data inputted}
 #' \item{fj.mat}{final principal surface fitted - f(lambda) n x p matrix}
 #' \item{lambda.j}{representation of samples in two dimensions}
-#' \item{N}{value of N selected in arguments}
 #' @export
 #'
 #' @examples
+#' surface <- principal.surface(iris[,1:3])
+#'
 principal.surface <- function(X, max.iter = 10, alpha = 0.6, N=50)
 {
+  X <- as.matrix(X)
   n <- nrow(X)
   p <- ncol(X)
   X0 <- scale(X, scale = F)
   SVD <- svd(X0)
+
   fj.mat <- X0 %*% SVD$v[, 1:2] %*% t(SVD$v[, 1:2]) + matrix(1,
                                                              ncol = 1, nrow = n) %*% apply(X, 2, mean)
+  f0.mat <- fj.mat
   SVD2 <- svd(fj.mat)
   lambda.j <- fj.mat %*% SVD2$v[, 1:2]
 
@@ -77,7 +80,6 @@ principal.surface <- function(X, max.iter = 10, alpha = 0.6, N=50)
 
     SVD2 <- svd(fj.mat)
     lambda.j <- fj.mat %*% SVD2$v[,1:2]
-    #lambda.j <- scale(lambda.j,center=T,scale=F)
 
     sumD.new <- sum(diag((fj.mat - X) %*% t(fj.mat - X)))
     eps1 <- abs(sumD.new - sumD)/sumD
@@ -85,7 +87,7 @@ principal.surface <- function(X, max.iter = 10, alpha = 0.6, N=50)
       finish <- T
     sumD <- sumD.new
     count <- count + 1
-    print(c(count, eps1, sumD))
+    print(c(round(count,0), eps1, sumD))
   }
 
   f.grid <- list(len = p)
@@ -139,12 +141,14 @@ principal.surface <- function(X, max.iter = 10, alpha = 0.6, N=50)
   lambda.grid <- f.grid2 %*% SVD2$v[,1:2]
 
 
-  rgl::points3d(X,col="red")
+  #rgl::points3d(f0.mat,col="red")
+  rgl::points3d(fj.mat,col="seagreen")
   rgl::lines3d(f.grid2,col="lightgrey")
   rgl::lines3d(f.grid3,col="lightgrey")
 
-  plot(lambda.j, col="seagreen",xlab = expression(lambda[1]),ylab=expression(lambda[2]),pch=16)
-  return(list(X = X, fj.mat = fj.mat,lambda.j = lambda.j,N=N))
+  plot(lambda.j, col="seagreen",xlab = expression(lambda[1]),ylab=expression(lambda[2]),
+       pch=16,yaxt="n",xaxt="n",asp=1)
+  return(list(fj.mat = fj.mat,lambda.j = lambda.j))
 }
 
 
