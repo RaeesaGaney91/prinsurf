@@ -1,0 +1,17 @@
+Package: prinsurf
+Title: Constructs Principal Surfaces
+Version: 1.0
+Authors@R: 
+    person("Raeesa", "Ganey", , "Raeesa.ganey@wits.ac.za", role = c("aut", "cre"),
+           comment = c(ORCID = "0009-0008-6973-0999"))
+Description: Construct a principal surface to a p-dimensional data set X.
+License: MIT + file LICENSE
+Encoding: UTF-8
+Roxygen: list(markdown = TRUE)
+RoxygenNote: 7.3.1
+Imports: 
+    rgl,
+    akima
+Suggests: 
+    stats,
+    Matrix
