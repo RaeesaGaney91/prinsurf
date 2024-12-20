@@ -52,17 +52,11 @@ library(rgl)
 ```{r example}
 library(prinsurf)
 surface <- principal.surface(X)
+rgl.snapshot("3d_plot.png")
 ```
 
+![3D Plot](3d_plot.png)
 
-```{r echo=FALSE}
-rglwidget() # Interactive widget in the RStudio viewer
-
-# Save as a standalone HTML file
-writeWebGL(dir = "docs", filename = "docs/surface3d.html")
-```
-
-[View Interactive 3D Surface Plot](https://RaeesaGaney91.github.io/prinsurf/surface3d.html)
 
 ## Report Bugs and Support
 If you encounter any issues or have questions,

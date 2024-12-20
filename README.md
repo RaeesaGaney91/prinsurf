@@ -27,33 +27,28 @@ This is a basic example on a simulated data set:
 ``` r
 library(prinsurf)
 surface <- principal.surface(X)
-#> [1] 1.0000000 0.8050027 0.9828361
-#> [1] 2.00000000 0.05651982 0.92728639
-#> [1] 3.0000000 0.1133866 0.8221446
-#> [1] 4.0000000 0.0140032 0.8106319
-#> [1] 5.000000000 0.007191001 0.804802647
-#> [1] 6.00000000 0.05562977 0.84957363
-#> [1] 7.00000000 0.02563281 0.87135060
-#> [1] 8.000000000 0.007452823 0.864856574
-#> [1] 9.00000000 0.01939636 0.88163164
-#> [1] 10.000000000  0.008002025  0.874576806
+#> [1] 1.0000000 0.6688169 1.2841119
+#> [1] 2.0000000 0.0360009 1.2378827
+#> [1] 3.00000000 0.05462674 1.30550421
+#> [1] 4.0000000 0.1116504 1.4512642
+#> [1] 5.00000000 0.04221104 1.39000485
+#> [1] 6.00000000 0.04954614 1.45887422
+#> [1] 7.0000000 0.1045443 1.3063572
+#> [1] 8.00000000 0.09602328 1.43179787
+#> [1] 9.00000000 0.09023632 1.56099804
+#> [1] 10.00000000  0.03068216  1.51310325
 ```
 
 <img src="man/figures/README-example-1.png" width="100%" />
 
-    #> Warning in snapshot3d(scene = x, width = width, height = height): webshot =
-    #> TRUE requires the webshot2 package and Chrome browser; using rgl.snapshot()
-    #> instead
+``` r
+rgl.snapshot("3d_plot.png")
+```
 
-<img src="../../../../../../private/var/folders/rt/kyvx8b4s3tz_8rwvs23fcxmr0000gn/T/RtmpqXE9Tf/file80a54a62415f.png" width="100%" />
-
-    #> Warning in writeWebGL(dir = "docs", filename = "docs/surface3d.html"): 'writeWebGL' is deprecated.
-    #> Use 'rglwidget' instead.
-    #> See help("Deprecated")
-    #> Warning in writeWebGL(dir = "docs", filename = "docs/surface3d.html"): webshot = TRUE requires the webshot2 package and Chrome browser; using rgl.snapshot() instead
-
-[View Interactive 3D Surface
-Plot](https://RaeesaGaney91.github.io/prinsurf/surface3d.html)
+<figure>
+<img src="3d_plot.png" alt="3D Plot" />
+<figcaption aria-hidden="true">3D Plot</figcaption>
+</figure>
 
 ## Report Bugs and Support
 
