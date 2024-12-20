@@ -52,10 +52,9 @@ library(rgl)
 ```{r example}
 library(prinsurf)
 surface <- principal.surface(X)
-rgl.snapshot("3d_plot.png")
 ```
 
-![3D Plot](3d_plot.png)
+![3D Plot](3d_plot.png){ width=400 }
 
 
 ## Report Bugs and Support
