@@ -6,12 +6,8 @@
 <!-- badges: start -->
 <!-- badges: end -->
 
-<<<<<<< HEAD
 The goal of prinsurf is to construct a principal surfaces that are
 two-dimensional surfaces that pass through the middle of a
-=======
-The goal of prinsurf is to construct a principal surface to a
->>>>>>> 3683d52abc7544de2a530574b0281c90440e9d80
 $p$-dimensional dataset.
 
 ## Installation
@@ -32,16 +28,16 @@ This is a basic example on a simulated data set:
 library(prinsurf)
 library(rgl)
 surface <- principal.surface(X)
-#> [1] 1.0000000 0.7552702 1.0275726
-#> [1] 2.00000000 0.06922002 0.95644399
-#> [1] 3.0000000 0.0153415 0.9417707
-#> [1] 4.00000000 0.04627398 0.98535019
-#> [1] 5.00000000 0.02334001 0.96235211
-#> [1] 6.000000000 0.008327922 0.954337712
-#> [1] 7.000000000 0.003055226 0.951421995
-#> [1] 8.00000000 0.00951877 0.96047836
-#> [1] 9.00000000 0.01086723 0.97091610
-#> [1] 10.0000000  0.0109745  0.9815714
+#> [1] 1.0000000 0.7828242 1.0170291
+#> [1] 2.0000000 0.1043076 0.9109452
+#> [1] 3.00000000 0.01774763 0.92711236
+#> [1] 4.00000000 0.03854133 0.89138021
+#> [1] 5.00000000 0.03291638 0.92072123
+#> [1] 6.00000000 0.01574138 0.90622781
+#> [1] 7.00000000 0.06762219 0.96750891
+#> [1] 8.00000000 0.01082235 0.95703820
+#> [1] 9.00000000 0.01906273 0.93879443
+#> [1] 10.000000000  0.004525712  0.934545720
 ```
 
 <img src="man/figures/README-example-1.png" width="100%" />
@@ -50,7 +46,7 @@ surface <- principal.surface(X)
     #> TRUE requires the webshot2 package and Chrome browser; using rgl.snapshot()
     #> instead
 
-<img src="../../../../../../private/var/folders/rt/kyvx8b4s3tz_8rwvs23fcxmr0000gn/T/Rtmps0iMk9/file7d036a53b63d.png" width="100%" />
+<img src="../../../../../../private/var/folders/rt/kyvx8b4s3tz_8rwvs23fcxmr0000gn/T/RtmptL4mkz/file7f092f09b105.png" width="100%" />
 
 ## Report Bugs and Support
 
