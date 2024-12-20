@@ -87,7 +87,7 @@ principal.surface <- function(X, max.iter = 10, alpha = 0.6, N=50,print_iteratio
       finish <- T
     sumD <- sumD.new
     count <- count + 1
-    if(print_iterations) print(c(round(count,0), eps1, sumD))
+    if(print_iterations==TRUE) print(c(round(count,0), eps1, sumD))
   }
 
   f.grid <- list(len = p)
