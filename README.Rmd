@@ -54,7 +54,7 @@ library(prinsurf)
 surface <- principal.surface(X)
 ```
 
-![3D Plot](3d_plot.png){ width=800 }
+![3D Plot](man/figures/3d_plot.png){ width=800 }
 
 
 ## Report Bugs and Support

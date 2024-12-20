@@ -4,17 +4,33 @@
 \alias{principal.surface}
 \title{Principal Surfaces}
 \usage{
-principal.surface(X, max.iter = 10, alpha = 0.6, N = 50)
+principal.surface(
+  X,
+  max.iter = 10,
+  alpha = 0.6,
+  N = 50,
+  print_iterations = FALSE
+)
 }
 \arguments{
-\item{X}{data of size n x p}
+\item{X}{data containing continuous variables}
 
-\item{max.iter}{maximum number of iterations in the principal surface algorithm if the algorithm does not converge.}
+\item{max.iter}{maximum number of iterations in the principal surface algorithm.}
 
 \item{alpha}{span argument in loess() function}
 
 \item{N}{creates an N^2 x p interpolated grid surface}
+
+\item{print_iterations}{print the iterations in the principal surface algorithm}
+}
+\value{
+\item{fj.mat}{final principal surface fitted - f(lambda) n x p matrix}
+\item{lambda.j}{representation of samples in two dimensions}
 }
 \description{
 Principal Surfaces
+}
+\examples{
+surface <- principal.surface(iris[,1:3])
+
 }

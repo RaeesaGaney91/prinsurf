@@ -5,6 +5,7 @@
 #' @param max.iter maximum number of iterations in the principal surface algorithm.
 #' @param alpha span argument in loess() function
 #' @param N creates an N^2 x p interpolated grid surface
+#' @param print_iterations print the iterations in the principal surface algorithm
 #'
 #' @return
 #' \item{fj.mat}{final principal surface fitted - f(lambda) n x p matrix}

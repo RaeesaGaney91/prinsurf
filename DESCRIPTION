@@ -14,4 +14,7 @@ Imports:
     akima
 Suggests: 
     stats,
-    Matrix
+    Matrix,
+    knitr,
+    rmarkdown
+VignetteBuilder: knitr

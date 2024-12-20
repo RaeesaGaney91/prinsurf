@@ -32,7 +32,7 @@ surface <- principal.surface(X)
 <img src="man/figures/README-example-1.png" width="100%" />
 
 <figure>
-<img src="3d_plot.png" width="800" alt="3D Plot" />
+<img src="man/figures/3d_plot.png" width="800" alt="3D Plot" />
 <figcaption aria-hidden="true">3D Plot</figcaption>
 </figure>
 
