@@ -14,7 +14,7 @@
 #' @examples
 #' surface <- principal.surface(iris[,1:3])
 #'
-principal.surface <- function(X, max.iter = 10, alpha = 0.6, N=50)
+principal.surface <- function(X, max.iter = 10, alpha = 0.6, N=50,print_iterations=FALSE)
 {
   X <- as.matrix(X)
   n <- nrow(X)
@@ -87,7 +87,7 @@ principal.surface <- function(X, max.iter = 10, alpha = 0.6, N=50)
       finish <- T
     sumD <- sumD.new
     count <- count + 1
-    print(c(round(count,0), eps1, sumD))
+    if(print_iterations) print(c(round(count,0), eps1, sumD))
   }
 
   f.grid <- list(len = p)
