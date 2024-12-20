@@ -6,9 +6,9 @@
 <!-- badges: start -->
 <!-- badges: end -->
 
-The goal of prinsurf is to construct a principal surfaces that are
-two-dimensional surfaces that pass through the middle of a
-$p$-dimensional dataset.
+The goal of prinsurf is to construct a principal surface that is
+two-dimensional and passes through the middle of a $p$-dimensional
+dataset.
 
 ## Installation
 
