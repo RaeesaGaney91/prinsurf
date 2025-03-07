@@ -1,20 +1,25 @@
-
-#' Principal Surfaces
+#' Principal Surface
 #'
-#' @param X data containing continuous variables
-#' @param max.iter maximum number of iterations in the principal surface algorithm.
-#' @param alpha span argument in loess() function
-#' @param N creates an N^2 x p interpolated grid surface
-#' @param print_iterations print the iterations in the principal surface algorithm
+#' A function to compute principal surfaces based on input data containing continuous variables.
 #'
-#' @return
-#' \item{fj.mat}{final principal surface fitted - f(lambda) n x p matrix}
-#' \item{lambda.j}{representation of samples in two dimensions}
+#' @param X A data frame or matrix containing continuous variables.
+#' @param max.iter Integer. Maximum number of iterations for the principal surface algorithm.
+#' @param alpha Numeric. The span argument passed to the `loess()` function.
+#' @param N Integer. The resolution for the interpolated grid surface, creating an \eqn{N^2 \times p} matrix.
+#' @param print_iterations Logical. Should the iterations in the principal surface algorithm be printed? Defaults to `FALSE`.
+#'
+#' @return A list with the following components:
+#' \describe{
+#'   \item{\code{fj.mat}}{A numeric \eqn{n \times p} matrix of the final principal surface fitted values.}
+#'   \item{\code{lambda.j}}{A numeric representation of the samples in two dimensions.}
+#' }
+#'
 #' @export
 #'
 #' @examples
-#' surface <- principal.surface(iris[,1:3])
-#'
+#' \dontrun{
+#' surface <- principal.surface(iris[,1:3],max.iter = 3)}
+#' surface <- principal.surface(iris[1:50,1:3],max.iter = 3)
 principal.surface <- function(X, max.iter = 10, alpha = 0.6, N=50,print_iterations=FALSE)
 {
   X <- as.matrix(X)

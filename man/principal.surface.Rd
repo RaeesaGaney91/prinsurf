@@ -2,7 +2,7 @@
 % Please edit documentation in R/principal.surface.R
 \name{principal.surface}
 \alias{principal.surface}
-\title{Principal Surfaces}
+\title{Principal Surface}
 \usage{
 principal.surface(
   X,
@@ -13,24 +13,28 @@ principal.surface(
 )
 }
 \arguments{
-\item{X}{data containing continuous variables}
+\item{X}{A data frame or matrix containing continuous variables.}
 
-\item{max.iter}{maximum number of iterations in the principal surface algorithm.}
+\item{max.iter}{Integer. Maximum number of iterations for the principal surface algorithm.}
 
-\item{alpha}{span argument in loess() function}
+\item{alpha}{Numeric. The span argument passed to the \code{loess()} function.}
 
-\item{N}{creates an N^2 x p interpolated grid surface}
+\item{N}{Integer. The resolution for the interpolated grid surface, creating an \eqn{N^2 \times p} matrix.}
 
-\item{print_iterations}{print the iterations in the principal surface algorithm}
+\item{print_iterations}{Logical. Should the iterations in the principal surface algorithm be printed? Defaults to \code{FALSE}.}
 }
 \value{
-\item{fj.mat}{final principal surface fitted - f(lambda) n x p matrix}
-\item{lambda.j}{representation of samples in two dimensions}
+A list with the following components:
+\describe{
+\item{\code{fj.mat}}{A numeric \eqn{n \times p} matrix of the final principal surface fitted values.}
+\item{\code{lambda.j}}{A numeric representation of the samples in two dimensions.}
+}
 }
 \description{
-Principal Surfaces
+A function to compute principal surfaces based on input data containing continuous variables.
 }
 \examples{
-surface <- principal.surface(iris[,1:3])
-
+\dontrun{
+surface <- principal.surface(iris[,1:3],max.iter = 3)}
+surface <- principal.surface(iris[1:50,1:3],max.iter = 3)
 }
