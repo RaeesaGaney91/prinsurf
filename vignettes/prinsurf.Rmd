@@ -150,7 +150,7 @@ fitted value away from the sample's own. The per-axis root-mean-square reading
 error quantifies this.
 
 ```{r axis-error}
-#axis_predictive_error(fit)              # PS: RMS reading error per axis (NA = deferred)
+axis_predictive_error(fit)              # PS: RMS reading error per axis (NA = deferred)
 
 ## PCA biplot per-variable reading error (rank-2), same standardised units
 sqrt(colMeans((Z - Zhat)^2))

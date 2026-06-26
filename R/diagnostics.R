@@ -39,26 +39,26 @@ predictivity <- function(object) {
   pred
 }
 
-#' Axis predictivity of a principal-surface biplot
+#' Standard predictive error of biplot axes
 #'
-#' For each variable that receives a calibrated gradient-flow axis, the proportion
-#' of its variance recovered by orthogonally projecting the samples onto that axis
-#' and reading the calibration, \eqn{1 - \sum_i (x_{ij} - \hat x_{ij})^2 /
-#' \sum_i (x_{ij} - \bar x_j)^2}. Deferred variables (no axis) are returned as
-#' \code{NA}, since they are read from contours rather than an axis.
+#' For each variable that receives a calibrated gradient-flow axis, the
+#' root-mean-square difference between the value obtained by orthogonally
+#' projecting each sample onto the axis and the variable's true value. This is the
+#' per-axis mean standard predictive error of the predictive-biplot tradition
+#' (Gower and coworkers); lower is better, in the units of the working data.
+#' Deferred variables (read from contours, no axis) are returned as \code{NA}.
 #' @param object A \code{"prinsurf"} object.
-#' @return A named numeric vector of per-variable axis predictivities, with the
-#'   mean over non-deferred variables as the attribute \code{"overall"}.
+#' @return A named numeric vector of per-axis RMS predictive errors, with the mean
+#'   over non-deferred axes as the attribute \code{"overall"}.
 #' @seealso \code{\link{predictivity}} for sample predictivity.
 #' @export
-axis_predictivity <- function(object) {
+axis_predictive_error <- function(object) {
   vn <- object$varnames
   out <- vapply(seq_along(vn), function(j) {
     ax <- psaxis(object, j)
     if (!isTRUE(ax$monotone)) return(NA_real_)
     pred <- .proj_pred(ax$axis, ax$cal, object$lambda)
-    x <- object$X[, j]
-    1 - sum((x - pred)^2) / sum((x - mean(x))^2)
+    sqrt(mean((object$X[, j] - pred)^2))
   }, numeric(1))
   names(out) <- vn
   attr(out, "overall") <- mean(out, na.rm = TRUE)

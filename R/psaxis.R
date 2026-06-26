@@ -36,7 +36,7 @@
 #' ax$monotone
 #' @export
 psaxis <- function(object, var, N = 55, h = 0.03, steps = 800,
-                   delta = 0.10, cover_min = 0.55, defer = TRUE) {
+                   delta = 0.05, cover_min = 0.55, defer = TRUE) {
   stopifnot(inherits(object, "prinsurf"))
   VAR <- .ps_var(object, var)
   lam <- object$lambda
