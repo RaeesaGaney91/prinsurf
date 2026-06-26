@@ -17,7 +17,7 @@
 #' @export
 #'
 #' @examples
-#' \dontrun{
+#' \donttest{
 #' surface <- principal.surface(iris[,1:3],max.iter = 3)}
 #' surface <- principal.surface(iris[1:50,1:3],max.iter = 3)
 principal.surface <- function(X, max.iter = 10, alpha = 0.6, N=50,print_iterations=FALSE)

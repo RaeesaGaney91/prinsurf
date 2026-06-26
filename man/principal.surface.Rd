@@ -34,7 +34,7 @@ A list with the following components:
 A function to compute principal surfaces based on input data containing continuous variables.
 }
 \examples{
-\dontrun{
+\donttest{
 surface <- principal.surface(iris[,1:3],max.iter = 3)}
 surface <- principal.surface(iris[1:50,1:3],max.iter = 3)
 }

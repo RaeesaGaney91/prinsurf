@@ -1,20 +1,25 @@
 Package: prinsurf
-Title: Constructs Principal Surfaces
-Version: 1.0
+Title: Principal Surface Biplots
+Version: 2.0
 Authors@R: 
     person("Raeesa", "Ganey", , "Raeesa.ganey@wits.ac.za", role = c("aut", "cre"),
            comment = c(ORCID = "0009-0008-6973-0999"))
-Description: Construct a principal surface that are two-dimensional surfaces that pass through the middle of a p-dimensional data set. They minimise the distance from the data points, and provide a nonlinear summary of data. The surfaces are nonparametric and their shape is suggested by the data. The formation of a surface is found using an iterative procedure which starts with a linear summary, typically with a principal component plane. Each successive iteration is a local average of the p-dimensional points, where an average is based on a projection of a point onto the nonlinear surface of the previous iteration. For more information on principal surfaces, see Ganey, R. 2019, Biplots based on principal surfaces,Faculty of Science ,Department of Statistical Sciences, UCT.
-License: MIT + file LICENSE
+Description: Fits principal surfaces (Hastie and Stuetzle, 1989) and constructs smooth, predictive biplot axes for them by gradient flow: each variable's
+    calibrated axis is the steepest-ascent trajectory of its fitted surface
+    coordinate, which is smooth by construction, crosses the variable's contour
+    lines orthogonally, and reduces to the linear principal-component-analysis
+    biplot axis when the surface is flat. Variables whose fitted value has an
+    interior extremum (closed contours) are detected as non-monotone and the
+    axis is withheld in favour of contour-based reading. The implementation is
+    base-R only.
+License: GPL-3
 Encoding: UTF-8
-Roxygen: list(markdown = TRUE)
+Depends: R (>= 3.5.0)
+Imports: stats, graphics, grDevices
+Suggests: testthat (>= 3.0.0)
 RoxygenNote: 7.3.1
-Imports: 
-    rgl
-Suggests: 
-    stats,
-    Matrix,
-    akima,
-    knitr,
-    rmarkdown
-VignetteBuilder: knitr
+NeedsCompilation: no
+Packaged: 2026-06-25 15:25:53 UTC; root
+Author: Raeesa Ganey [aut, cre]
+Maintainer: Raeesa Ganey <raeesa.ganey@wits.ac.za>
+
