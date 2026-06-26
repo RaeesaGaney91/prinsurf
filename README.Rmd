@@ -1,12 +1,25 @@
+---
+output: github_document
+---
 
 <!-- README.md is generated from README.Rmd. Please edit that file -->
 
-# prinsurf <img src="man/figures/logo.png" align="right" width="150" alt="" />
+```{r, include = FALSE}
+knitr::opts_chunk$set(
+  collapse = TRUE,
+  comment = "#>",
+  fig.path = "man/figures/README-",
+  out.width = "100%"
+)
+```
+
+# prinsurf <img src="man/figures/logo.png" align="right" width="150" alt="" /> 
+
+
 
 ## Installation
 
-You can install the development version of prinsurf from
-[GitHub](https://github.com/) with:
+You can install the development version of prinsurf from [GitHub](https://github.com/) with:
 
 ``` r
 library(devtools)
@@ -15,10 +28,12 @@ install_github("RaeesaGaney91/prinsurf")
 
 ## Example
 
-``` r
+
+```{r,eval=FALSE}
 fit <- prinsurf(X, scale = TRUE)   # X: n x p numeric matrix
 fit                                 # summary
 plot(fit, group = my_factor)        # biplot with calibrated axes
 psaxis(fit, "my_var")               # one variable's axis (or a deferral flag)
 predictivity(fit)                   # per-sample predictivity
 ```
+
