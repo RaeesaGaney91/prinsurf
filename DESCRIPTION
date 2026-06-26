@@ -1,10 +1,12 @@
 Package: prinsurf
+Type: Package
 Title: Principal Surface Biplots
 Version: 2.0
-Authors@R: 
-    person("Raeesa", "Ganey", , "Raeesa.ganey@wits.ac.za", role = c("aut", "cre"),
-           comment = c(ORCID = "0009-0008-6973-0999"))
-Description: Fits principal surfaces (Hastie and Stuetzle, 1989) and constructs smooth, predictive biplot axes for them by gradient flow: each variable's
+Authors@R: c(
+    person("Raeesa", "Ganey", role = c("aut", "cre"),
+           email = "raeesa.ganey@wits.ac.za"))
+Description: Fits principal surfaces (Hastie and Stuetzle, 1989) and constructs
+    smooth, predictive biplot axes for them by gradient flow: each variable's
     calibrated axis is the steepest-ascent trajectory of its fitted surface
     coordinate, which is smooth by construction, crosses the variable's contour
     lines orthogonally, and reduces to the linear principal-component-analysis
@@ -17,8 +19,9 @@ Encoding: UTF-8
 Depends: R (>= 3.5.0)
 Imports: stats, graphics, grDevices
 Suggests: testthat (>= 3.0.0), knitr, rmarkdown
-RoxygenNote: 7.3.2
+VignetteBuilder: knitr
+RoxygenNote: 7.3.1
 NeedsCompilation: no
-Packaged: 2026-06-25 15:25:53 UTC; root
+Packaged: 2026-06-26 19:10:48 UTC; root
 Author: Raeesa Ganey [aut, cre]
 Maintainer: Raeesa Ganey <raeesa.ganey@wits.ac.za>
