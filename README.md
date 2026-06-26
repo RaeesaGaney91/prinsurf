@@ -1,42 +1,21 @@
-
-<!-- README.md is generated from README.Rmd. Please edit that file -->
-
 # prinsurf
 
-<!-- badges: start -->
-<!-- badges: end -->
+Principal surface biplots with smooth **gradient-flow axes**.
 
-The goal of prinsurf is to construct a principal surface that is
-two-dimensional and passes through the middle of a $p$-dimensional
-dataset.
+`prinsurf` fits a two-dimensional principal surface to a numeric data matrix and
+builds calibrated biplot axes for it by gradient flow: each variable's axis is the
+steepest-ascent trajectory of its fitted coordinate function. Such an axis is
+smooth by construction, crosses the variable's contour lines orthogonally, and
+reduces to the ordinary PCA-biplot axis when the surface is flat. Variables whose
+fitted value has an interior extremum, or whose axis spans too little of the
+variable's range, are *deferred* and read from contour lines instead.
 
-## Installation
-
-You can install the development version of prinsurf from
-[GitHub](https://github.com/) with:
-
-``` r
-library(devtools)
-devtools::install_github("RaeesaGaney91/prinsurf")
+```r
+fit <- prinsurf(X, scale = TRUE)   # X: n x p numeric matrix
+fit                                 # summary
+plot(fit, group = my_factor)        # biplot with calibrated axes
+psaxis(fit, "my_var")               # one variable's axis (or a deferral flag)
+predictivity(fit)                   # per-sample predictivity
 ```
 
-## Example
-
-This is a basic example on a simulated data set:
-
-``` r
-library(prinsurf)
-surface <- principal.surface(X)
-```
-
-<img src="man/figures/README-example-1.png" width="100%" />
-
-<figure>
-<img src="man/figures/3d_plot.png" width="800" alt="3D Plot" />
-<figcaption aria-hidden="true">3D Plot</figcaption>
-</figure>
-
-## Report Bugs and Support
-
-If you encounter any issues or have questions, please open an issue on
-the GitHub repository.
+Base R only (no compiled code, no non-CRAN dependencies).
