@@ -17,17 +17,17 @@ principal.surface(
 
 \item{max.iter}{Integer. Maximum number of iterations for the principal surface algorithm.}
 
-\item{alpha}{Numeric. The span argument passed to the \code{loess()} function.}
+\item{alpha}{Numeric. The span argument passed to the `loess()` function.}
 
 \item{N}{Integer. The resolution for the interpolated grid surface, creating an \eqn{N^2 \times p} matrix.}
 
-\item{print_iterations}{Logical. Should the iterations in the principal surface algorithm be printed? Defaults to \code{FALSE}.}
+\item{print_iterations}{Logical. Should the iterations in the principal surface algorithm be printed? Defaults to `FALSE`.}
 }
 \value{
 A list with the following components:
 \describe{
-\item{\code{fj.mat}}{A numeric \eqn{n \times p} matrix of the final principal surface fitted values.}
-\item{\code{lambda.j}}{A numeric representation of the samples in two dimensions.}
+  \item{\code{fj.mat}}{A numeric \eqn{n \times p} matrix of the final principal surface fitted values.}
+  \item{\code{lambda.j}}{A numeric representation of the samples in two dimensions.}
 }
 }
 \description{

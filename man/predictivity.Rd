@@ -11,7 +11,7 @@ predictivity(object)
 }
 \value{
 A numeric vector of per-sample predictivities (with the overall mean as
-the attribute \code{"overall"}).
+  the attribute \code{"overall"}).
 }
 \description{
 For each sample, the proportion of its squared length reconstructed by the

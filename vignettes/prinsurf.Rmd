@@ -1,0 +1,205 @@
+---
+title: "Principal-surface biplots with gradient-flow axes"
+author: "Raeesa Ganey"
+date: "`r Sys.Date()`"
+output: rmarkdown::html_vignette
+vignette: >
+  %\VignetteIndexEntry{Principal-surface biplots with gradient-flow axes}
+  %\VignetteEngine{knitr::rmarkdown}
+  %\VignetteEncoding{UTF-8}
+---
+
+```{r setup, include = FALSE}
+knitr::opts_chunk$set(collapse = TRUE, comment = "#>",
+                      fig.width = 6.5, fig.height = 5.2, fig.align = "center")
+set.seed(1)
+```
+
+## What this package does
+
+A biplot equips a low-dimensional scatter of samples with calibrated *axes*, so
+that a variable's value for a sample can be recovered by projecting the sample
+onto the axis and reading the scale. For a **principal surface** -- a smooth
+curved two-dimensional manifold fitted through the data (Hastie & Stuetzle,
+1989) -- the classical axis is the *back-projection* axis of nonlinear biplots:
+for each marker value one point of that value's contour is chosen,
+independently of the others, and the points are joined in order. The result is
+continuous but kinked.
+
+Those kinks are not merely unsightly. An axis that doubles back on itself makes
+orthogonal projection *ill-defined* -- a sample can have two feet on the axis
+with different readings -- and prediction can be worse than simply using the
+variable's mean. (The PhD thesis underlying this package documents exactly such
+a case.)
+
+`prinsurf` replaces that axis with the **gradient-flow axis**. For variable
+\(j\) with fitted coordinate function \(\hat f_j\), the calibrated axis is the
+steepest-ascent trajectory of \(\hat f_j\),
+\[
+  \frac{d\gamma_j}{ds}=\frac{\nabla \hat f_j(\gamma_j(s))}{\lVert\nabla \hat f_j(\gamma_j(s))\rVert},
+  \qquad \gamma_j(0)=\bar{\boldsymbol\lambda},
+\]
+started at the centroid of the sample coordinates. Three properties are proved
+in the accompanying theory note: the axis is **smooth** (Picard--Lindelöf), it
+crosses the variable's contour lines **orthogonally** with monotone calibration,
+and it **reduces exactly to the linear PCA-biplot axis when the surface is
+flat**. The last property is what gives it standing: this is not a separate
+device bolted onto principal surfaces, but the canonical generalisation of the
+prediction axis to curved surfaces.
+
+## Fitting a surface and drawing the biplot
+
+```{r fit-iris}
+library(prinsurf)
+
+fit <- prinsurf(iris[, 1:4], scale = TRUE)   # standardise heterogeneous units
+fit
+```
+
+`plot()` draws the sample coordinates with a calibrated gradient-flow axis for
+each variable. Setting `defer = FALSE` draws an axis for *every* variable (we
+return to deferral below).
+
+```{r plot-iris}
+plot(fit, group = iris$Species, defer = FALSE)
+```
+
+Each axis is a smooth curve, calibrated in the variable's own units, with ticks
+at convenient values and the variable name at the high end. A single variable's
+axis is available directly:
+
+```{r psaxis}
+ax <- psaxis(fit, "Petal.Length")
+ax
+kink_max(ax$axis)        # largest turning angle, in degrees: a smooth axis is small
+```
+
+`ax$axis` is the polyline (many closely spaced vertices), `ax$cal` the
+calibration at each vertex, and `ax$g1`, `ax$g2`, `ax$M` the grid of fitted
+values used for contours.
+
+## When a single axis is not enough
+
+A single calibrated axis only makes sense when \(\hat f_j\) is monotone over the
+surface. If the variable folds -- an interior peak or basin, i.e. closed
+contours -- no single axis can carry it: every axis would assign one value to a
+whole closed loop. `prinsurf` detects this with two criteria:
+
+* **Boundary-extremum** (Criterion 1): an interior value beyond the entire
+  support-boundary range certifies a genuine interior peak or basin.
+* **Coverage** (Criterion 2): after the axis is built, it must span at least
+  `cover_min` (default 0.55) of the variable's range over the samples;
+  otherwise the flow has stalled at a local extremum and the axis covers only
+  part of the variable.
+
+A variable failing either is *deferred* and read from its contour lines instead.
+The half-sphere below is the canonical illustration: its height coordinate has
+concentric circular contours (an interior maximum), while the two horizontal
+coordinates are monotone.
+
+```{r halfsphere}
+## upper cap of a sphere: x = height (folded), y, z = horizontals (monotone)
+n <- 200; u <- 2 * runif(n) - 1; th <- 2 * pi * runif(n) - pi
+S <- cbind(x = u, y = sin(th) * sqrt(1 - u^2), z = cos(th) * sqrt(1 - u^2))
+S <- S[S[, "x"] > -0.4, ]                 # keep the cap
+S <- sweep(S, 2, colMeans(S))             # centre
+sph <- prinsurf(S, max.iter = 8)
+
+vapply(colnames(S), function(v) isTRUE(psaxis(sph, v)$monotone), logical(1))
+```
+
+`x` is deferred; `y` and `z` get axes. We draw the monotone axes and overlay the
+contours of the deferred `x`:
+
+```{r halfsphere-plot}
+plot(sph, contours = "x")
+```
+
+The closed contours of `x` are exactly the structure that defeats a single axis.
+The biplot is therefore *mixed by construction*: monotone variables carry
+calibrated axes read by projection, folded variables are read from contours --
+mirroring the classical split between axis prediction and contour prediction,
+but now decided automatically and for a stated reason.
+
+## Reading and prediction: an honest account
+
+It is worth being precise about two different notions of "prediction", because
+they behave differently.
+
+**Sample predictivity** asks how well the surface reconstructs each *whole*
+sample, \(\hat{\boldsymbol x}_i = \hat f(\boldsymbol\lambda_i)\); it is read from
+the sample's *position* and does not use any single axis. Here the curved
+surface beats a PCA biplot, because it captures nonlinear structure the flat
+plane cannot.
+
+```{r sample-pred}
+ps  <- mean(predictivity(fit))
+
+## PCA biplot (rank-2) sample predictivity on the same standardised data
+Z   <- scale(as.matrix(iris[, 1:4]))
+V2  <- svd(Z)$v[, 1:2]; Zhat <- Z %*% V2 %*% t(V2)
+pca <- mean(1 - rowSums((Z - Zhat)^2) / rowSums(Z^2))
+
+c(principal_surface = round(ps, 3), pca_biplot = round(pca, 3))
+```
+
+**Axis reading** asks how well a *single* axis recovers a variable by orthogonal
+projection. On a curved surface this is a one-dimensional summary, and it is
+lossy wherever the contours bend: the perpendicular foot of a sample lands at a
+fitted value away from the sample's own. The per-axis root-mean-square reading
+error quantifies this.
+
+```{r axis-error}
+#axis_predictive_error(fit)              # PS: RMS reading error per axis (NA = deferred)
+
+## PCA biplot per-variable reading error (rank-2), same standardised units
+sqrt(colMeans((Z - Zhat)^2))
+```
+
+A PCA biplot's straight axis, by contrast, reads the *full* rank-2 value
+(projection onto a straight loading returns both coordinates' contribution), so
+on a near-linear data set such as iris it reads individual variables more
+accurately than a curved one-dimensional axis does. This is geometry, not a
+defect: exact projection reading requires straight contours.
+
+The practical reading of all this: the gradient-flow axis is a trustworthy
+**display** of a variable's direction and approximate scale -- well-defined,
+smooth, orthogonally calibrated -- and a principled **diagnostic** for which
+variables a single axis can carry. Precise values for folded variables come from
+contours. The surface's *predictive* advantage over PCA lives in the
+position/contour reading, not in projection onto one curved axis.
+
+## The linear limit
+
+When the data are essentially two-dimensional the surface is flat, and the
+gradient-flow axis collapses onto the straight PCA-biplot axis. We can see this
+directly: generate near-planar data, and the axis is almost straight (tiny
+kink) and points along the variable's loading direction.
+
+```{r linear-limit}
+m <- 150; a <- runif(m, -1, 1); b <- runif(m, -1, 1)
+L <- cbind(v1 = a, v2 = b, v3 = 0.6 * a - 0.4 * b) + matrix(rnorm(3 * m, 0, 0.01), m, 3)
+flat <- prinsurf(L, max.iter = 6)
+kink_max(psaxis(flat, "v1")$axis)     # near 0 degrees: the axis is straight
+psaxis(flat, "v1")$coverage           # near 1: it spans the variable
+```
+
+## Where this is going
+
+The surface represents the data better than PCA on sample predictivity, yet a
+single one-dimensional axis read by orthogonal projection cannot realise that
+advantage for curved variables -- the same limitation faced by every nonlinear
+biplot. The natural next step is a *reading rule* that uses a sample's full
+position (not only its perpendicular foot on the axis) so that a single readable
+per-variable object predicts at the surface's accuracy. Such an element -- an
+axis that is read like an axis but predicts like the surface -- would turn the
+present contribution (a well-defined, calibrated, diagnostic-backed axis) into
+one that also predicts what a PCA biplot cannot. That is the open direction this
+package is meant to support exploring.
+
+## Reference
+
+Theory, propositions and proofs are in the accompanying note `theory.pdf`;
+the underlying methodology is the principal surface of Hastie & Stuetzle (1989)
+and the nonlinear/predictive biplot framework of Gower, Gardner-Lubbe & le Roux
+(2011), *Understanding Biplots*.

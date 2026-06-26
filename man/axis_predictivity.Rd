@@ -11,7 +11,7 @@ axis_predictivity(object)
 }
 \value{
 A named numeric vector of per-variable axis predictivities, with the
-mean over non-deferred variables as the attribute \code{"overall"}.
+  mean over non-deferred variables as the attribute \code{"overall"}.
 }
 \description{
 For each variable that receives a calibrated gradient-flow axis, the proportion

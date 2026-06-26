@@ -12,6 +12,9 @@
   col_axis = "grey25",
   pch = 16,
   cex = 0.7,
+  defer = TRUE,
+  cover_min = 0.55,
+  delta = 0.05,
   ...
 )
 }

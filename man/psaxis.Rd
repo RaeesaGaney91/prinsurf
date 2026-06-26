@@ -11,7 +11,8 @@ psaxis(
   h = 0.03,
   steps = 800,
   delta = 0.05,
-  cover_min = 0.55
+  cover_min = 0.55,
+  defer = TRUE
 )
 }
 \arguments{
@@ -28,13 +29,17 @@ psaxis(
 \item{delta}{Boundary-extremum margin, as a fraction of the value range.}
 
 \item{cover_min}{Minimum fraction of the variable's range the axis must span.}
+
+\item{defer}{Logical; if FALSE, deferral is switched off and a calibrated
+axis is returned for every variable that yields a non-degenerate flow
+(Criteria 1 and 2 are not applied).}
 }
 \value{
 An object of class \code{"psaxis"}: a list with \code{axis} (an
-\eqn{m \times 2} matrix of axis vertices, or \code{NULL} if deferred),
-\code{cal} (the calibration value at each vertex), \code{monotone} (logical;
-\code{FALSE} when deferred), \code{coverage}, \code{var}, and the evaluation
-grid \code{g1}, \code{g2}, \code{M} used for drawing contours.
+  \eqn{m \times 2} matrix of axis vertices, or \code{NULL} if deferred),
+  \code{cal} (the calibration value at each vertex), \code{monotone} (logical;
+  \code{FALSE} when deferred), \code{coverage}, \code{var}, and the evaluation
+  grid \code{g1}, \code{g2}, \code{M} used for drawing contours.
 }
 \description{
 Constructs the calibrated gradient-flow axis for a single variable of a fitted

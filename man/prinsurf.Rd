@@ -24,11 +24,11 @@ squares at each iteration.}
 }
 \value{
 An object of class \code{"prinsurf"}: a list with elements
-\code{lambda} (the \eqn{n \times 2} surface coordinates of the samples),
-\code{fj.mat} (the fitted surface coordinates of the samples in the working
-units), \code{models} (the per-variable \code{loess} coordinate functions),
-\code{varnames}, \code{center}, \code{scale}, \code{span} and
-\code{iterations}.
+  \code{lambda} (the \eqn{n \times 2} surface coordinates of the samples),
+  \code{fj.mat} (the fitted surface coordinates of the samples in the working
+  units), \code{models} (the per-variable \code{loess} coordinate functions),
+  \code{varnames}, \code{center}, \code{scale}, \code{span} and
+  \code{iterations}.
 }
 \description{
 Fits a two-dimensional principal surface to a numeric data matrix using the
@@ -45,5 +45,5 @@ fit
 }
 \references{
 Hastie, T. and Stuetzle, W. (1989) Principal curves.
-\emph{Journal of the American Statistical Association} \strong{84}, 502--516.
+  \emph{Journal of the American Statistical Association} \strong{84}, 502--516.
 }

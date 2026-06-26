@@ -16,6 +16,9 @@
 #' @param steps Maximum number of integration steps in each direction.
 #' @param delta Boundary-extremum margin, as a fraction of the value range.
 #' @param cover_min Minimum fraction of the variable's range the axis must span.
+#' @param defer Logical; if FALSE, deferral is switched off and a calibrated
+#'   axis is returned for every variable that yields a non-degenerate flow
+#'   (Criteria 1 and 2 are not applied).
 #'
 #' @return An object of class \code{"psaxis"}: a list with \code{axis} (an
 #'   \eqn{m \times 2} matrix of axis vertices, or \code{NULL} if deferred),
@@ -33,7 +36,7 @@
 #' ax$monotone
 #' @export
 psaxis <- function(object, var, N = 55, h = 0.03, steps = 800,
-                   delta = 0.05, cover_min = 0.55) {
+                   delta = 0.10, cover_min = 0.55, defer = TRUE) {
   stopifnot(inherits(object, "prinsurf"))
   VAR <- .ps_var(object, var)
   lam <- object$lambda
@@ -50,7 +53,7 @@ psaxis <- function(object, var, N = 55, h = 0.03, steps = 800,
     gx[i, k] <- (M[i + 1, k] - M[i - 1, k]) / (g1[i + 1] - g1[i - 1])
     gy[i, k] <- (M[i, k + 1] - M[i, k - 1]) / (g2[k + 1] - g2[k - 1])
   }
-  defer <- function(cov = NA)
+  mk_defer <- function(cov = NA)
     structure(list(axis = NULL, cal = NULL, monotone = FALSE, coverage = cov,
                    var = object$varnames[VAR], g1 = g1, g2 = g2, M = M),
               class = "psaxis")
@@ -64,10 +67,10 @@ psaxis <- function(object, var, N = 55, h = 0.03, steps = 800,
       bnd[i, k] <- TRUE
   }
   intr <- sup & !bnd; rngM <- diff(range(M, na.rm = TRUE))
-  if (any(intr) && any(bnd) &&
+  if (defer && any(intr) && any(bnd) &&
       ((max(M[intr]) > max(M[bnd]) + delta * rngM) ||
        (min(M[intr]) < min(M[bnd]) - delta * rngM)))
-    return(defer())
+    return(mk_defer())
 
   ## gradient flow (RK4) from the supported node nearest the centroid
   bilin <- function(Mat, x, y) {
@@ -95,20 +98,20 @@ psaxis <- function(object, var, N = 55, h = 0.03, steps = 800,
     pa
   }
   vg <- which(!is.na(gx) & !is.na(gy), arr.ind = TRUE)
-  if (nrow(vg) == 0) return(defer())
+  if (nrow(vg) == 0) return(mk_defer())
   gpts <- cbind(g1[vg[, 1]], g2[vg[, 2]])
   st <- gpts[which.min(rowSums(sweep(gpts, 2, colMeans(lam))^2)), ]
   fw <- flow(st, +1); bw <- flow(st, -1)
   axis <- rbind(fw[nrow(fw):1, , drop = FALSE], bw[-1, , drop = FALSE])
   if (nrow(axis) > 2)
     axis <- axis[c(TRUE, rowSums(abs(diff(axis))) > 1e-6), , drop = FALSE]
-  if (nrow(axis) < 3) return(defer(0))
+  if (nrow(axis) < 3) return(mk_defer(0))
   cal <- .ps_eval(object, axis, VAR)
 
   ## Criterion 2: the axis must span the variable's range over the samples
   fsamp <- .ps_eval(object, lam, VAR)
   coverage <- diff(range(cal)) / diff(range(fsamp))
-  if (is.finite(coverage) && coverage < cover_min) return(defer(coverage))
+  if (defer && is.finite(coverage) && coverage < cover_min) return(mk_defer(coverage))
 
   structure(list(axis = axis, cal = cal, monotone = TRUE, coverage = coverage,
                  var = object$varnames[VAR], g1 = g1, g2 = g2, M = M),

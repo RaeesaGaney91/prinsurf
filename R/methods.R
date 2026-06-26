@@ -53,7 +53,8 @@ print.prinsurf <- function(x, ...) {
 #' @return Invisibly, a character vector of the variables that were deferred.
 #' @export
 plot.prinsurf <- function(x, vars = NULL, group = NULL, contours = NULL,
-                          col_axis = "grey25", pch = 16, cex = 0.7, ...) {
+                          col_axis = "grey25", pch = 16, cex = 0.7,
+                          defer = TRUE, cover_min = 0.55, delta = 0.05, ...) {
   lam <- x$lambda
   if (is.null(vars)) vars <- x$varnames
   rng <- apply(lam, 2, range); pad <- 0.28 * (rng[2, ] - rng[1, ])
@@ -69,7 +70,7 @@ plot.prinsurf <- function(x, vars = NULL, group = NULL, contours = NULL,
   }
   deferred <- character(0)
   for (v in vars) {
-    ax <- psaxis(x, v)
+    ax <- psaxis(x, v, defer = defer, cover_min = cover_min, delta = delta)
     if (isTRUE(ax$monotone)) .draw_axis(ax, v, col = col_axis)
     else deferred <- c(deferred, v)
   }
@@ -124,10 +125,12 @@ fitted.prinsurf <- function(object, ...) {
 predict.prinsurf <- function(object, var, ...) {
   VAR <- .ps_var(object, var)
   ax <- psaxis(object, VAR)
-  if (isTRUE(ax$monotone)) .proj_pred(ax$axis, ax$cal, object$lambda)
+  pred <- if (isTRUE(ax$monotone)) .proj_pred(ax$axis, ax$cal, object$lambda)
   else {
     message(sprintf("'%s' is deferred (no axis); returning surface values f_hat(lambda).",
                     object$varnames[VAR]))
     .ps_eval(object, object$lambda, VAR)
   }
+  ## return on the variable's original scale (undo the centring/scaling done at fit time)
+  pred * object$scale[VAR] + object$center[VAR]
 }
