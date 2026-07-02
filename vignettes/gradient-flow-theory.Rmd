@@ -1,0 +1,275 @@
+---
+title: "Gradient-flow biplot axes"
+subtitle: "Theory and implementation"
+author: "Raeesa Ganey"
+output:
+  rmarkdown::html_vignette:
+    toc: true
+vignette: >
+  %\VignetteIndexEntry{Gradient-flow biplot axes}
+  %\VignetteEngine{knitr::rmarkdown}
+  %\VignetteEncoding{UTF-8}
+---
+
+```{r setup, include = FALSE}
+knitr::opts_chunk$set(
+  collapse = TRUE, comment = "#>",
+  fig.width = 7, fig.height = 5.5, fig.align = "center"
+)
+library(prinsurf)
+```
+
+# The axis-reading problem
+
+A principal component biplot (Gower and Hand, 1996) reads variable values
+directly: a biplot axis is a straight line calibrated with the variable's
+values, and you project each sample orthogonally onto it to recover a
+prediction. The geometry works because the axis is embedded in the plane that
+contains the fitted values — the PCA plane. The projection is linear and the
+arithmetic transparent.
+
+A principal surface is curved. The fitted surface is a smooth 2-dimensional
+manifold $\hat S$ embedded in $\mathbb{R}^p$, defined implicitly by the
+coordinate functions $\hat f_1, \ldots, \hat f_p$, each estimated by loess on
+the surface coordinates $(\lambda_i^{(1)}, \lambda_i^{(2)})$. That is, sample
+$i$ maps to the surface point
+$$\hat \mathbf{x}_i = (\hat f_1(\lambda_i), \ldots, \hat f_p(\lambda_i)) \in \hat S.$$
+
+Each variable $j$ defines a scalar field over the surface: the function
+$\hat f_j : \mathbb{R}^2 \to \mathbb{R}$. Unlike a plane, a curved surface has
+no single direction that is "aligned" with the variable; different parts of
+the surface may have different gradients. The **gradient-flow axis** for
+variable $j$ is the steepest-ascent trajectory of $\hat f_j$, started from the
+centre of the sample coordinates. It is smooth (solutions to the gradient-flow
+ODE), follows the direction of greatest rate of change, and crosses the
+variable's contour lines orthogonally at every point. This is the natural
+extension of the biplot axis to a curved surface.
+
+# The gradient field
+
+Given the fitted coordinate functions, we can compute the gradient of $\hat f_j$
+at any point $(\lambda_1, \lambda_2) \in \mathbb{R}^2$ by finite differences on
+a fine evaluation grid. Let $G_j(\lambda_1, \lambda_2)$ denote the 2-vector
+of partial derivatives:
+$$G_j = \left( \frac{\partial \hat f_j}{\partial \lambda_1}, \frac{\partial \hat f_j}{\partial \lambda_2} \right).$$
+
+This can be computed on a regular grid (default resolution $N = 60$) by
+centred differences on the smoothed field $\hat f_j(\lambda_1, \lambda_2)$.
+Points near the boundary of the grid (where one-sided differences are needed)
+are handled conservatively: their gradients are set to `NA` and the flow
+halts when it reaches one.
+
+# Gradient-flow integration
+
+The gradient-flow trajectory is the solution to the autonomous ODE
+$$\frac{d\boldsymbol{\lambda}(t)}{dt} = G_j(\boldsymbol{\lambda}(t)),$$
+where $\boldsymbol{\lambda}(t) = (\lambda_1(t), \lambda_2(t))$ is the position
+at time $t$. We integrate this numerically using fourth-order Runge-Kutta
+(RK4) with step size $h = 0.03$ (default) for up to 800 steps in each
+direction (forward and backward) from the starting point.
+
+The starting point is the grid node (after filtering to supported cells) that
+is closest to the centroid of the sample coordinates. Integrating backwards as
+well as forwards ensures the axis spans the full range where the field is
+monotone.
+
+**Why RK4?** The method is robust to the condition of the surface, and because
+the loess smooths are locally well-behaved, four stages per step is enough.
+Adaptive step-size methods (like `rk45`) would be overkill; fixed small steps
+are stable.
+
+The output is a polyline (sequence of vertices) that traces the gradient flow.
+Consecutive points that are very close (arc-length difference $< 10^{-6}$) are
+filtered as redundant.
+
+# Monotonicity criteria
+
+Not every variable yields a valid axis. Two criteria filter out cases where
+monotone reading would be misleading.
+
+## Criterion 1: Interior extremum
+
+If $\hat f_j$ has a local maximum or minimum in the *interior* of the
+supported region, strictly bounded by cells with local data support, then no
+monotone axis can represent the full field. The contours loop around the
+extremum, and any attempt to draw a line through the middle either misses
+the extreme value entirely or crosses it non-monotonically.
+
+This is detected by identifying:
+- The **boundary** of the supported region: cells with local data support
+  that are adjacent to unsupported cells.
+- The **interior**: cells with local data support that are not on the boundary.
+
+If any interior cell has a value exceeding the maximum of all boundary cells
+by more than $\delta \times (\text{range of } \hat f_j)$ (default $\delta = 0.05$),
+or falling below the minimum boundary value by the same margin, the variable
+is deferred. The margin $\delta$ prevents false positives at ragged edges
+where discrete grid cells create artificial steps.
+
+## Criterion 2: Coverage
+
+Even if monotone, an axis may span too little of the variable's observed
+range. We measure this by the **coverage**:
+$$\text{coverage} = \frac{\max(\text{axis calibration}) - \min(\text{axis calibration})}
+{\max(\hat f_j(\lambda_i)) - \min(\hat f_j(\lambda_i))},$$
+i.e., the fraction of the sample range that the axis actually spans. If this
+is less than `cover_min` (default 0.55), the axis is deferred because it is
+not capturing enough variation to be useful for biplot reading.
+
+Low coverage typically signals a variable with curvature so complex that the
+steepest ascent route only touches one flank of the field, leaving the other
+flank better visible in contour form.
+
+## When to override
+
+Both criteria are *display* decisions, not verdicts on the variable. A
+deferred variable is still fitted by loess, still predictable via
+`predict()`, and often the most interesting to understand via its contours.
+Pass `defer = FALSE` to `psaxis()` or to `plot()` to force an axis for every
+variable with a non-degenerate flow (Criteria 1 and 2 ignored), and inspect
+the returned `coverage` to see why deferral was the right call.
+
+# Axis calibration
+
+Once the gradient-flow polyline is in place, each vertex must be labelled with
+the variable's value. We evaluate $\hat f_j$ at each vertex:
+$$\text{calibration}_k = \hat f_j(\boldsymbol{\lambda}_k),$$
+where $\boldsymbol{\lambda}_k$ is the $k$-th vertex of the polyline. These
+values are in the working (centred, optionally scaled) units; `plot()` and
+`predict()` back-transform them to the original units for display and
+prediction.
+
+This design ensures the calibration is consistent with the field the axis
+represents: small perturbations of $\boldsymbol{\lambda}$ along the polyline
+produce monotone changes in the calibration, because the polyline follows the
+gradient direction.
+
+# Reading the axis
+
+To predict variable $j$ for a sample at $\boldsymbol{\lambda}_i$, orthogonally
+project $\boldsymbol{\lambda}_i$ onto the axis polyline. This gives the closest
+point on the axis (in Euclidean distance), and the calibration value at that
+point is the prediction. The orthogonal projection method is:
+
+For each segment of the polyline (from vertex $k$ to $k+1$),
+parametrize it as $\mathbf{a} + t (\mathbf{b} - \mathbf{a})$ for $t \in [0, 1]$.
+The foot of the perpendicular from $\boldsymbol{\lambda}_i$ to this segment is
+at
+$$t^* = \frac{(\boldsymbol{\lambda}_i - \mathbf{a}) \cdot (\mathbf{b} - \mathbf{a})}{\lVert \mathbf{b} - \mathbf{a} \rVert^2},$$
+clamped to $[0, 1]$. Compute this for every segment, find the segment with
+minimum distance, and linearly interpolate the calibration value.
+
+**Why orthogonal projection?** It is symmetric in how it treats a sample
+relative to the axis, robust to axis curvature, and identical to the reading
+rule of a straight-line biplot axis when the axis is indeed straight. It is
+also the definition used in Gower's predictive-biplot tradition for
+computing axis predictive error.
+
+# Comparison to alternatives
+
+Two other designs were considered and rejected.
+
+**Back-projection to the principal-component plane.** Take the initial PCA
+plane, project each sample onto the nearest surface point, then project *that*
+back onto the plane. This loses information: the back-projected point is no
+longer on the surface, and the reading is not about the surface field at all.
+
+**Independent calibration by ranking.** Find the sample with the highest
+variable value, the second-highest, etc., and mark those positions on the axis
+as calibration points. This is brittle when samples cluster, prone to
+outlier-driven calibration, and loses the connection between the axis's
+geometric path and the field it represents. Most critically, the axis itself
+is determined by gradient flow (a property of the fitted surface), while the
+calibration is data-driven; decoupling them invites inconsistency.
+
+The gradient-flow approach integrates the geometry and the data naturally: the
+axis follows the field, and the calibration represents that same field.
+
+# Implementation details
+
+**Grid resolution** (`N`, default 60): Higher values give smoother gradients
+but more computation. 60 is a good balance; go to 80–100 if you have many
+variables and a fast machine, or 40–50 for exploratory work.
+
+**Step size** (`h`, default 0.03): Smaller values trace the flow more finely
+but integrate longer. 0.03 is conservative; if your axes look jagged, decrease
+it slightly. If they look over-smooth or integration takes too long, increase
+it.
+
+**Max steps** (default 800): In each direction from the start. The flow stops
+early if it leaves the supported region or hits a degenerate point. 800 is
+plenty for practical datasets; lower it only if you are impatient.
+
+**Boundary margin** (`delta`, default 0.05): If interior extrema exceed
+boundary values by less than this fraction of the range, they are tolerated.
+Increase to be stricter (defer more variables); decrease to be more lenient.
+
+**Coverage threshold** (`cover_min`, default 0.55): Variables with axis
+coverage below this are deferred. Lower values accept more variables with
+narrow coverage; higher values defer conservatively.
+
+# Example: the blanket surface
+
+We use the blanket data to visualize the gradient-flow principle.
+
+```{r blanket-setup}
+set.seed(1)
+n  <- 200
+s  <- runif(n, -1, 1)
+t  <- runif(n, -1, 1)
+e  <- function() runif(n, -0.05, 0.05)
+x1 <- s + e()
+x2 <- t + e()
+x3 <- 0.7 * s + 0.9 * t^2 + e()
+X  <- cbind(x1, x2, x3)
+colnames(X) <- c("x", "y", "z")
+fit_b <- prinsurf(X, verbose = FALSE)
+```
+
+The $z$ coordinate has parabolic contours in the latent $(s, t)$ space.
+Its gradient-flow axis should follow the ridge of the parabola, bending
+smoothly. Let's inspect it:
+
+```{r blanket-z-axis}
+ax <- psaxis(fit_b, "z")
+print(ax)
+```
+
+The axis has `r nrow(ax$axis)` vertices and spans calibration range
+`[`r round(min(ax$cal), 2)`, `r round(max(ax$cal), 2)`]` in working units,
+with `r sprintf("%.2f", ax$coverage)` coverage. Plot it on the surface:
+
+```{r blanket-z-plot}
+plot(fit_b, vars = "z", contours = "z", col_contour = "lightblue")
+```
+
+The axis (black, with tick marks) follows the valley of the contours,
+staying orthogonal to them. Its path is smooth and monotone in the displayed
+calibration, even though the contours themselves are curved. This is exactly
+what the gradient flow achieves: it finds the direction of steepest ascent
+and follows it faithfully.
+
+Compare this to what a forced straight axis would show (by setting
+`defer = FALSE`):
+
+```{r blanket-z-straight, eval=FALSE}
+ax_straight <- psaxis(fit_b, "z", defer = FALSE)
+# This would show an axis that tries to be linear but fails to track
+# the parabolic field — gaps in coverage, or overshooting into contours.
+```
+
+The gradient-flow axis is better because it adapts to the geometry.
+
+# References
+
+Gower, J.C. and Hand, D.J. (1996). *Biplots*. Chapman & Hall, London.
+
+Gower, J.C., Lubbe, S. and le Roux, N. (2011). *Understanding Biplots*.
+Wiley, Chichester.
+
+Hastie, T. and Stuetzle, W. (1989). Principal curves.
+*Journal of the American Statistical Association*, **84**, 502–516.
+
+Le Roux, B. and Rouanet, H. (2004). *Geometric Data Analysis: From
+Correspondence Analysis to Structured Data Analysis*. Kluwer Academic
+Publishers.
