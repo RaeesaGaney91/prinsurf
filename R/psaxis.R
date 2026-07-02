@@ -35,19 +35,13 @@
 #' ax <- psaxis(fit, "z")
 #' ax$monotone
 #' @export
-psaxis <- function(object, var, N = 55, h = 0.03, steps = 800,
+psaxis <- function(object, var, N = 60, h = 0.03, steps = 800,
                    delta = 0.05, cover_min = 0.55, defer = TRUE) {
   stopifnot(inherits(object, "prinsurf"))
   VAR <- .ps_var(object, var)
   lam <- object$lambda
-  g1 <- seq(min(lam[, 1]), max(lam[, 1]), length.out = N)
-  g2 <- seq(min(lam[, 2]), max(lam[, 2]), length.out = N)
-  grid <- as.matrix(expand.grid(l1 = g1, l2 = g2))
-  fg <- .ps_eval(object, grid, VAR)
-  rad <- 2.5 * sqrt(diff(range(lam[, 1]))^2 + diff(range(lam[, 2]))^2) / sqrt(nrow(lam))
-  nn <- apply(grid, 1, function(q) sqrt(min(colSums((t(lam) - q)^2))))
-  fg[nn >= rad] <- NA
-  M <- matrix(fg, N, N)
+  gr <- .ps_grid(object, VAR, N = N)
+  g1 <- gr$g1; g2 <- gr$g2; M <- gr$M
   gx <- gy <- matrix(NA, N, N)
   for (i in 2:(N - 1)) for (k in 2:(N - 1)) {
     gx[i, k] <- (M[i + 1, k] - M[i - 1, k]) / (g1[i + 1] - g1[i - 1])

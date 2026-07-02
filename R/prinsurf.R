@@ -33,8 +33,8 @@
 #' fit <- prinsurf(X, max.iter = 6)
 #' fit
 #' @export
-prinsurf <- function(X, max.iter = 10, span = 0.6, scale = FALSE,
-                     verbose = FALSE) {
+prinsurf <- function(X, max.iter = 10, span = 0.6, scale = TRUE,
+                     verbose = TRUE) {
   X <- as.matrix(X)
   if (!is.numeric(X)) stop("X must be numeric.")
   if (ncol(X) < 3) stop("A principal surface needs at least 3 variables.")
@@ -106,22 +106,13 @@ prinsurf <- function(X, max.iter = 10, span = 0.6, scale = FALSE,
   list(lambda = lambda, fj.mat = fj, models = models, iter = count)
 }
 
-## evaluate the fitted coordinate function of variable j at 2-D coordinates L
-.ps_eval <- function(object, L, j) {
-  L <- matrix(L, ncol = 2)
-  stats::predict(object$models[[j]],
-                 data.frame(l1 = L[, 1], l2 = L[, 2]))
-}
 
-## resolve a variable given as name or index to an integer column
-.ps_var <- function(object, var) {
-  if (is.character(var)) {
-    v <- match(var, object$varnames)
-    if (is.na(v)) stop("Unknown variable: ", var)
-    v
-  } else {
-    v <- as.integer(var)
-    if (v < 1 || v > length(object$varnames)) stop("Variable index out of range.")
-    v
-  }
+
+#' @export
+print.prinsurf <- function(x, ...) {
+  cat(sprintf("Principal surface fit: %d samples, %d variables\n",
+              nrow(x$lambda), length(x$varnames)))
+  cat(sprintf("  loess span %.2f, converged in %d iterations\n", x$span, x$iterations))
+  cat(sprintf("  variables: %s\n", paste(x$varnames, collapse = ", ")))
+  invisible(x)
 }

@@ -30,11 +30,9 @@ kink_max <- function(A) {
 #'   the attribute \code{"overall"}).
 #' @export
 predictivity <- function(object) {
-  X <- object$X                       # working (centred / scaled) data
+  X <- object$X                       # working data, already centred (and scaled)
   Xhat <- fitted(object)
-  Xc <- scale(X, scale = FALSE)
-  sst <- rowSums(Xc^2)
-  pred <- 1 - rowSums((X - Xhat)^2) / sst
+  pred <- 1 - rowSums((X - Xhat)^2) / rowSums(X^2)
   attr(pred, "overall") <- mean(pred)
   pred
 }
@@ -62,5 +60,48 @@ axis_predictive_error <- function(object) {
   }, numeric(1))
   names(out) <- vn
   attr(out, "overall") <- mean(out, na.rm = TRUE)
+  out
+}
+
+
+#' Predict a variable's values from the biplot
+#'
+#' For a monotone variable, predicts by orthogonally projecting each sample's
+#' coordinate onto the variable's calibrated gradient-flow axis. For a deferred
+#' variable (no axis), returns the surface value \eqn{\hat f_j(\lambda_i)} (the
+#' contour reading), with a message.
+#' @param object A \code{"prinsurf"} object.
+#' @param var Variable name or index.
+#' @param ... Ignored.
+#' @return A numeric vector of predicted values, one per sample.
+#' @export
+predict.prinsurf <- function(object, var, ...) {
+  VAR <- .ps_var(object, var)
+  ax <- psaxis(object, VAR)
+  pred <- if (isTRUE(ax$monotone)) .proj_pred(ax$axis, ax$cal, object$lambda)
+  else {
+    message(sprintf("'%s' is deferred (no axis); returning surface values f_hat(lambda).",
+                    object$varnames[VAR]))
+    .ps_eval(object, object$lambda, VAR)
+  }
+  ## return on the variable's original scale (undo the centring/scaling done at fit time)
+  pred * object$scale[VAR] + object$center[VAR]
+}
+
+
+#' Fitted (reconstructed) values from a principal surface
+#'
+#' Returns the fitted surface values \eqn{\hat f_j(\lambda_i)} for every sample
+#' and variable -- the principal-surface reconstruction of the data, which
+#' underlies its sample predictivity.
+#' @param object A \code{"prinsurf"} object.
+#' @param ... Ignored.
+#' @return An \eqn{n \times p} matrix of fitted values.
+#' @export
+fitted.prinsurf <- function(object, ...) {
+  p <- length(object$varnames)
+  out <- vapply(seq_len(p), function(j) .ps_eval(object, object$lambda, j),
+                numeric(nrow(object$lambda)))
+  colnames(out) <- object$varnames
   out
 }

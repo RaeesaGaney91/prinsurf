@@ -4,7 +4,7 @@
 \alias{prinsurf}
 \title{Fit a principal surface}
 \usage{
-prinsurf(X, max.iter = 10, span = 0.6, scale = FALSE, verbose = FALSE)
+prinsurf(X, max.iter = 10, span = 0.6, scale = TRUE, verbose = TRUE)
 }
 \arguments{
 \item{X}{A numeric matrix or data frame, \eqn{n \times p}. Column names are
