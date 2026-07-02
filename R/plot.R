@@ -75,7 +75,7 @@ plot.prinsurf <- function(x, vars, group = NULL, contours = NULL,
       M <- g$M * x$scale[VAR] + x$center[VAR]   # display in original units
       graphics::plot(lam, type = "n", xlim = xlim, ylim = ylim,
                      main = x$varnames[VAR], axes = FALSE,
-                     xlab = "", ylab = "", ...)
+                     xlab = "", ylab = "",asp=1, ...)
       if (fill)
         graphics::image(g$g1, g$g2, M, add = TRUE,
                         col = grDevices::hcl.colors(64, fill_pal, rev = TRUE))
@@ -94,7 +94,7 @@ plot.prinsurf <- function(x, vars, group = NULL, contours = NULL,
 
   ## single-panel biplot: samples, optional single-variable contours, axes
   graphics::plot(lam, type = "n", xlim = xlim, ylim = ylim,
-                 axes = FALSE, xlab = "", ylab = "", ...)
+                 axes = FALSE, xlab = "", ylab = "",asp=1, ...)
   if (fill && length(contours)) {
     if (length(contours) > 1)
       warning("fill = TRUE with several contour variables: filling only the first (",
