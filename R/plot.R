@@ -24,16 +24,17 @@
 #' @param col_contour Colour(s) for the contour lines and their name labels,
 #'   recycled across the contour variables. Default: \code{"grey40"} for a
 #'   single contour variable, or a qualitative palette
-#'   (\code{hcl.colors(k, "Dark 2")}) when several are drawn. When a heat
-#'   fill is active the lines on top of it are drawn dark grey instead.
-#' @param fill Logical; if \code{TRUE}, the contoured variable is also shown
-#'   as a heat map (\code{\link[graphics]{image}}) beneath the samples, in
-#'   original units, masked to the data-support region. In the single-panel
-#'   display only one variable can be filled; with \code{contours = TRUE}
-#'   each panel is filled with its own variable.
-#' @param fill_pal Name of a sequential \code{\link[grDevices]{hcl.colors}}
-#'   palette for the heat fill (default \code{"YlOrRd"}, light = low,
-#'   intense = high).
+#'   (\code{hcl.colors(k, "Dark 2")}) when several are drawn. Ignored for a
+#'   variable when \code{col_by_level = TRUE}.
+#' @param col_by_level Logical; if \code{TRUE}, contour lines are coloured by
+#'   their marker value through \code{level_pal} (colour encodes the
+#'   calibration, low to high), instead of the single \code{col_contour}
+#'   colour. Only the calibrated lines are coloured; the plane between them is
+#'   left blank.
+#' @param level_pal Name of a sequential \code{\link[grDevices]{hcl.colors}}
+#'   palette used when \code{col_by_level = TRUE} (default \code{"YlOrRd"},
+#'   light = low, intense = high).
+#' @param n_contours Number of contour levels to draw (default 10).
 #' @param pch,cex Point symbol and size for samples.
 #' @param defer,cover_min,delta Passed to \code{\link{psaxis}} for each axis;
 #'   see there for details.
@@ -43,7 +44,7 @@
 #' @export
 plot.prinsurf <- function(x, vars, group = NULL, contours = NULL,
                           col_axis = "grey25", col_contour = NULL,
-                          fill = FALSE, fill_pal = "YlOrRd",
+                          col_by_level = FALSE, level_pal = "YlOrRd", n_contours = 10,
                           pch = 16, cex = 0.7,
                           defer = TRUE, cover_min = 0.55, delta = 0.05, ...) {
   lam <- x$lambda
@@ -75,15 +76,11 @@ plot.prinsurf <- function(x, vars, group = NULL, contours = NULL,
       M <- g$M * x$scale[VAR] + x$center[VAR]   # display in original units
       graphics::plot(lam, type = "n", xlim = xlim, ylim = ylim,
                      main = x$varnames[VAR], axes = FALSE,
-                     xlab = "", ylab = "",asp=1, ...)
-      if (fill)
-        graphics::image(g$g1, g$g2, M, add = TRUE,
-                        col = grDevices::hcl.colors(64, fill_pal, rev = TRUE))
+                     xlab = "", ylab = "", ...)
       graphics::points(lam, pch = pch, cex = cex, col = cols)
       graphics::box()
-      graphics::contour(g$g1, g$g2, M, add = TRUE,
-                        col = if (fill) "grey30" else col_contour[k],
-                        nlevels = 10, lwd = 0.7, labcex = 0.6)
+      .draw_contours(g$g1, g$g2, M, n_contours, col_by_level, level_pal,
+                     col_contour[k], lwd = 0.7, labcex = 0.6)
     }
     if (!is.null(gf))
       graphics::legend("topright", levels(gf),
@@ -94,33 +91,21 @@ plot.prinsurf <- function(x, vars, group = NULL, contours = NULL,
 
   ## single-panel biplot: samples, optional single-variable contours, axes
   graphics::plot(lam, type = "n", xlim = xlim, ylim = ylim,
-                 axes = FALSE, xlab = "", ylab = "",asp=1, ...)
-  if (fill && length(contours)) {
-    if (length(contours) > 1)
-      warning("fill = TRUE with several contour variables: filling only the first (",
-              contours[1], "); use contours = TRUE for one filled panel per variable.")
-    VARf <- .ps_var(x, contours[1])
-    grf <- .ps_grid(x, VARf)
-    Mf <- grf$M * x$scale[VARf] + x$center[VARf]
-    graphics::image(grf$g1, grf$g2, Mf, add = TRUE,
-                    col = grDevices::hcl.colors(64, fill_pal, rev = TRUE))
-  } else if (fill) {
-    warning("fill = TRUE ignored: no contour variable requested.")
-  }
+                 axes = FALSE, xlab = "", ylab = "", ...)
   graphics::points(lam, pch = pch, cex = cex, col = cols)
   graphics::box()
   if (length(contours)) for (k in seq_along(contours)) {
     VAR <- .ps_var(x, contours[k])
     g <- .ps_grid(x, VAR)
     M <- g$M * x$scale[VAR] + x$center[VAR]   # display in original units
-    graphics::contour(g$g1, g$g2, M, add = TRUE,
-                      col = if (fill && k == 1) "grey30" else col_contour[k],
-                      nlevels = 10, lwd = 0.6, labcex = 0.5)
+    .draw_contours(g$g1, g$g2, M, n_contours, col_by_level, level_pal,
+                   col_contour[k], lwd = 0.6, labcex = 0.5)
     ## name the contour set at its maximum -- with no calibrated axis on the
     ## plot, nothing else identifies which variable the contours belong to
     im <- which(M == max(M, na.rm = TRUE), arr.ind = TRUE)[1, ]
     graphics::text(g$g1[im[1]], g$g2[im[2]], x$varnames[VAR],
-                   col = col_contour[k], font = 3, cex = 0.7)
+                   col = if (col_by_level) "grey30" else col_contour[k],
+                   font = 3, cex = 0.7)
   }
   deferred <- character(0)
   for (v in vars) {
@@ -155,6 +140,20 @@ plot.prinsurf <- function(x, vars, group = NULL, contours = NULL,
     NULL
   })
   out[!vapply(out, is.null, logical(1))]
+}
+
+## draw contour lines of a field M, either in one colour or coloured by level
+## through a sequential palette (colour = calibration). Levels are the pretty
+## values of M so the mapping is stable across panels of the same variable.
+.draw_contours <- function(g1, g2, M, n_contours, by_level, pal, col1,
+                           lwd = 0.6, labcex = 0.5) {
+  lev <- pretty(range(M, na.rm = TRUE), n_contours)
+  lev <- lev[lev > min(M, na.rm = TRUE) & lev < max(M, na.rm = TRUE)]
+  if (length(lev) == 0) return(invisible())
+  col <- if (by_level) grDevices::hcl.colors(length(lev), pal, rev = TRUE)
+         else rep(col1, length(lev))
+  graphics::contour(g1, g2, M, add = TRUE, levels = lev, col = col,
+                    lwd = lwd, labcex = labcex)
 }
 
 ## draw one calibrated axis: polyline, tick marks at pretty values, name label

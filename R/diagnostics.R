@@ -66,23 +66,36 @@ axis_predictive_error <- function(object) {
 
 #' Predict a variable's values from the biplot
 #'
-#' For a monotone variable, predicts by orthogonally projecting each sample's
-#' coordinate onto the variable's calibrated gradient-flow axis. For a deferred
-#' variable (no axis), returns the surface value \eqn{\hat f_j(\lambda_i)} (the
-#' contour reading), with a message.
+#' Two readings are available, selected by \code{rule}. The \code{"axis"} rule
+#' (default) reads a monotone variable by orthogonally projecting each sample's
+#' coordinate onto its calibrated gradient-flow axis, and falls back to the
+#' surface value \eqn{\hat f_j(\lambda_i)} for a deferred variable (with a
+#' message). The \code{"contour"} rule reads every variable from its contours,
+#' returning the surface value \eqn{\hat f_j(\lambda_i)} regardless of whether
+#' the variable is monotone; this is the reading that carries no contour-curvature
+#' loss (see the theory vignette, Proposition 4), and is the one to use when
+#' comparing axis reading against contour reading on the same variables.
 #' @param object A \code{"prinsurf"} object.
 #' @param var Variable name or index.
+#' @param rule Reading rule: \code{"axis"} (project onto the calibrated axis) or
+#'   \code{"contour"} (evaluate the fitted surface field at each sample).
 #' @param ... Ignored.
-#' @return A numeric vector of predicted values, one per sample.
+#' @return A numeric vector of predicted values, one per sample, in the
+#'   variable's original units.
 #' @export
-predict.prinsurf <- function(object, var, ...) {
+predict.prinsurf <- function(object, var, rule = c("axis", "contour"), ...) {
+  rule <- match.arg(rule)
   VAR <- .ps_var(object, var)
-  ax <- psaxis(object, VAR)
-  pred <- if (isTRUE(ax$monotone)) .proj_pred(ax$axis, ax$cal, object$lambda)
-  else {
-    message(sprintf("'%s' is deferred (no axis); returning surface values f_hat(lambda).",
-                    object$varnames[VAR]))
-    .ps_eval(object, object$lambda, VAR)
+  pred <- if (rule == "contour") {
+    .ps_eval(object, object$lambda, VAR)          # contour reading f_hat(lambda)
+  } else {
+    ax <- psaxis(object, VAR)
+    if (isTRUE(ax$monotone)) .proj_pred(ax$axis, ax$cal, object$lambda)
+    else {
+      message(sprintf("'%s' is deferred (no axis); returning surface values f_hat(lambda).",
+                      object$varnames[VAR]))
+      .ps_eval(object, object$lambda, VAR)
+    }
   }
   ## return on the variable's original scale (undo the centring/scaling done at fit time)
   pred * object$scale[VAR] + object$center[VAR]

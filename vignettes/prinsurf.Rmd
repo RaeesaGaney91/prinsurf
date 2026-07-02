@@ -1,11 +1,11 @@
 ---
-title: "Principal surface biplots with `prinsurf`"
+title: "Principal surface biplots with prinsurf"
 author: "Raeesa Ganey"
 output:
   rmarkdown::html_vignette:
     toc: true
 vignette: >
-  %\VignetteIndexEntry{Principal surface biplots with `prinsurf`}
+  %\VignetteIndexEntry{Principal surface biplots with prinsurf}
   %\VignetteEngine{knitr::rmarkdown}
   %\VignetteEncoding{UTF-8}
 ---
@@ -36,9 +36,9 @@ variable is the steepest-ascent trajectory of that field, started from the
 centre of the samples. It crosses the variable's contours orthogonally, carries
 a monotone calibration in the variable's original units, and is read exactly
 like a classical biplot axis: project a sample onto the axis, read off the
-value. A variable whose field is not axis-readable - because it has an
+value. A variable whose field is not axis-readable — because it has an
 interior extremum (Criterion 1) or because the constructed axis spans too
-little of the variable's range (Criterion 2) - is **deferred** and read from
+little of the variable's range (Criterion 2) — is **deferred** and read from
 its contour lines instead.
 
 The workflow is `prinsurf()` to fit, `plot()` to display, and
@@ -83,22 +83,29 @@ The `x` and `y` axes are close to straight, because those variables are close
 to linear in the latent coordinates. The interest is in `z`: its contours over
 the surface are curved, and its gradient-flow axis bends smoothly so as to stay
 orthogonal to them. To see the field itself, suppress the axes and ask for the
-contours, with a heat fill underneath:
+contours, coloured by their marker value:
 
 ```{r blanket-contour}
-plot(fit_b, vars = NULL, contours = "z", fill = TRUE)
+plot(fit_b, vars = NULL, contours = "z", col_by_level = TRUE)
 ```
 
-Contour levels and axis calibrations are always labelled in the variable's
-original units, matching what `predict()` returns. Blank cells in the fill are
-not an artefact: the display is masked to the region of the surface that has
-local data support, and refuses to colour where the fitted value would be an
+With `col_by_level = TRUE` each contour line is coloured by the value it
+represents (low to high through a sequential palette), so colour *is* the
+calibration — the contour analogue of tick marks on an axis. Only the
+calibrated lines are drawn; the space between them is left blank, so the
+display never colours a region where the fitted value would be an
 extrapolation.
+
+Contour levels and axis calibrations are always labelled in the variable's
+original units, matching what `predict()` returns. Where the contours stop
+short of the frame, the surface simply has no local data support there — the
+grid is masked to the region the samples cover, and refuses to draw where the
+fitted value would be an extrapolation.
 
 How much better is the bent axis than a straight one? `kink_max()` measures
 the largest turning angle along an axis (small for a smooth flow), and
 `axis_predictive_error()` gives the root-mean-square error, per axis, of
-reading each sample by orthogonal projection - the standard predictive error
+reading each sample by orthogonal projection — the standard predictive error
 of the Gower biplot tradition, in working (standardised) units.
 
 ```{r blanket-diagnostics}
@@ -108,8 +115,8 @@ axis_predictive_error(fit_b)
 
 # A half-sphere cap: deferral in action
 
-The second example is data on a spherical cap. One coordinate - the one along
-the cap's axis - attains its maximum at the pole, in the *interior* of the
+The second example is data on a spherical cap. One coordinate — the one along
+the cap's axis — attains its maximum at the pole, in the *interior* of the
 surface. No monotone axis can represent such a variable, and this is exactly
 what Criterion 1 detects.
 
@@ -134,11 +141,11 @@ deferred <- plot(fit_s)
 deferred
 ```
 
-The deferred variable gets no axis. Reading it is still possible - from its
+The deferred variable gets no axis. Reading it is still possible — from its
 contours, which on a cap are concentric rings around the pole:
 
 ```{r sphere-contour}
-plot(fit_s, vars = NULL, contours = deferred, fill = TRUE)
+plot(fit_s, vars = NULL, contours = deferred, col_by_level = TRUE)
 ```
 
 `psaxis()` reports the deferral decision for any single variable, and
@@ -152,8 +159,8 @@ psaxis(fit_s, deferred[1])
 head(predict(fit_s, deferred[1]))
 ```
 
-If you want an axis regardless - for instance to demonstrate *why* deferral is
-the right call - switch the criteria off with `defer = FALSE` in `psaxis()`
+If you want an axis regardless — for instance to demonstrate *why* deferral is
+the right call — switch the criteria off with `defer = FALSE` in `psaxis()`
 or in `plot()`, and inspect the coverage the forced axis achieves.
 
 # Iris: a real dataset with groups
@@ -178,11 +185,12 @@ plot(fit_i, vars = "Petal.Length", contours = "Petal.Length",
      group = iris$Species)
 ```
 
-Passing `contours = TRUE` switches to a panel display, one filled panel per
-variable - the quickest overall diagnostic view of the fitted surface:
+Passing `contours = TRUE` switches to a panel display, one panel per variable
+with its contours coloured by level — the quickest overall diagnostic view of
+the fitted surface:
 
 ```{r iris-panels, fig.height = 7}
-plot(fit_i, contours = TRUE, fill = TRUE, group = iris$Species)
+plot(fit_i, contours = TRUE, col_by_level = TRUE, group = iris$Species)
 ```
 
 ## How well can the display be read?
@@ -202,13 +210,35 @@ summary(as.numeric(pred))
 axis_predictive_error(fit_i)
 ```
 
-And the direct check - predicted against observed for one variable:
+And the direct check — predicted against observed for one variable:
 
 ```{r iris-predict}
 plot(iris$Petal.Length, predict(fit_i, "Petal.Length"),
      xlab = "observed", ylab = "read from the biplot axis")
 abline(0, 1, col = "grey50")
 ```
+
+## Two reading rules
+
+`predict()` offers two rules. The default, `rule = "axis"`, projects each
+sample onto the calibrated axis — the value a reader recovers by eye.
+`rule = "contour"` instead returns the surface value $\hat f_j(\lambda_i)$ for
+every variable, the reading from the contours; this carries no
+contour-curvature loss (see the theory vignette, Proposition 4) and is the
+comparison the method turns on. The two coincide only where the contours are
+straight, and diverge in proportion to their curvature:
+
+```{r iris-rules}
+ax   <- predict(fit_i, "Petal.Length", rule = "axis")
+cont <- predict(fit_i, "Petal.Length", rule = "contour")
+obs  <- iris$Petal.Length
+c(axis    = sqrt(mean((obs - ax)^2)),
+  contour = sqrt(mean((obs - cont)^2)))
+```
+
+The contour reading is at least as accurate everywhere, and strictly better
+where the field bends — but it is not a drawn axis a reader can follow, which
+is the trade the mixed biplot makes.
 
 # Practical notes
 
@@ -225,11 +255,18 @@ axis must span, default `0.55`). Both are arguments to `psaxis()` and to
 deferred variable is still fitted, still predictable, and often the most
 interesting one on the plot.
 
-**Blank regions.** The fill and contours are evaluated on a grid that is
-masked to the data-support region: a cell with no sample nearby is left blank.
-Gaps therefore mark genuine voids in the configuration - between clusters, or
-at sparse edges - where the smooth surface would otherwise display
-extrapolated values as if they were supported.
+**Colouring by level.** With `col_by_level = TRUE`, contour lines are coloured
+by the value they represent, so colour encodes the calibration directly. Only
+the calibrated curves are drawn; unlike a filled surface, nothing is painted in
+the space between them, so the display never suggests a value where the surface
+merely interpolates. Set `n_contours` for the number of levels and `level_pal`
+for the palette.
+
+**Blank regions.** The contours are evaluated on a grid masked to the
+data-support region: cells with no sample nearby are dropped. Where the
+contours stop short of the frame, the configuration has a genuine void there —
+between clusters, or at a sparse edge — and the smooth surface would otherwise
+extrapolate a value with no data behind it.
 
 **Units.** Displayed calibrations, contour levels, and everything returned by
 `predict()` are in the original units of each variable. The internal

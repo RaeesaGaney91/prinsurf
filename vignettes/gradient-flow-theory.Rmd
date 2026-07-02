@@ -1,12 +1,12 @@
 ---
-title: "Gradient-flow biplot axes"
-subtitle: "Theory and implementation"
+title: "Smooth predictive axes for principal surface biplots"
+subtitle: "Theory"
 author: "Raeesa Ganey"
 output:
   rmarkdown::html_vignette:
     toc: true
 vignette: >
-  %\VignetteIndexEntry{Gradient-flow biplot axes}
+  %\VignetteIndexEntry{Smooth predictive axes for principal surface biplots}
   %\VignetteEngine{knitr::rmarkdown}
   %\VignetteEncoding{UTF-8}
 ---
@@ -19,257 +19,328 @@ knitr::opts_chunk$set(
 library(prinsurf)
 ```
 
-# The axis-reading problem
+This vignette states the theory behind the axes drawn by `plot.prinsurf` and
+read by `predict.prinsurf`. It follows the accompanying manuscript; the package
+functions are pointed to as each result is introduced. The companion vignette
+*Principal surface biplots with prinsurf* covers usage.
 
-A principal component biplot (Gower and Hand, 1996) reads variable values
-directly: a biplot axis is a straight line calibrated with the variable's
-values, and you project each sample orthogonally onto it to recover a
-prediction. The geometry works because the axis is embedded in the plane that
-contains the fitted values — the PCA plane. The projection is linear and the
-arithmetic transparent.
+# Setup
 
-A principal surface is curved. The fitted surface is a smooth 2-dimensional
-manifold $\hat S$ embedded in $\mathbb{R}^p$, defined implicitly by the
-coordinate functions $\hat f_1, \ldots, \hat f_p$, each estimated by loess on
-the surface coordinates $(\lambda_i^{(1)}, \lambda_i^{(2)})$. That is, sample
-$i$ maps to the surface point
-$$\hat \mathbf{x}_i = (\hat f_1(\lambda_i), \ldots, \hat f_p(\lambda_i)) \in \hat S.$$
+Let $\mathbf{X}$ be an $n \times p$ column-centred data matrix with rows
+$\mathbf{x}_i^\top$. A principal surface (Hastie and Stuetzle, 1989) is a smooth
+two-dimensional manifold in $\mathbb{R}^p$ carrying a coordinate
+$\boldsymbol{\lambda} = (\lambda_1, \lambda_2)^\top$ over a region
+$\Omega \subset \mathbb{R}^2$, with
+$$\mathbf{x} \approx \mathbf{f}(\boldsymbol{\lambda}) =
+\bigl(\hat f_1(\boldsymbol{\lambda}), \ldots, \hat f_p(\boldsymbol{\lambda})\bigr)^\top,$$
+where each fitted coordinate function $\hat f_j : \Omega \to \mathbb{R}$ is a
+smooth scatterplot smoother (local regression) of variable $j$ on
+$\boldsymbol{\lambda}$. Sample $i$ carries the coordinate
+$\boldsymbol{\lambda}_i$ of its projection onto the surface; plotting the
+$\boldsymbol{\lambda}_i$ gives the display underlying the biplot, and
+$\boldsymbol{\lambda}_c$ denotes their centroid. We write $\Omega$ for the
+region supported by data (Estimation, below) and $\partial\Omega$ for its
+boundary.
 
-Each variable $j$ defines a scalar field over the surface: the function
-$\hat f_j : \mathbb{R}^2 \to \mathbb{R}$. Unlike a plane, a curved surface has
-no single direction that is "aligned" with the variable; different parts of
-the surface may have different gradients. The **gradient-flow axis** for
-variable $j$ is the steepest-ascent trajectory of $\hat f_j$, started from the
-centre of the sample coordinates. It is smooth (solutions to the gradient-flow
-ODE), follows the direction of greatest rate of change, and crosses the
-variable's contour lines orthogonally at every point. This is the natural
-extension of the biplot axis to a curved surface.
+In the package, `prinsurf()` fits the surface and returns the $\hat f_j$ as
+per-variable `loess` models (`object$models`) together with the sample
+coordinates $\boldsymbol{\lambda}_i$ (`object$lambda`). The task is to equip the
+display, for each variable, with a calibrated biplot axis: a curve in $\Omega$
+along which $x_j$ is read off, and onto which a sample is projected to recover a
+predicted value.
 
-# The gradient field
+# The axis as a trajectory of the fitted response
 
-Given the fitted coordinate functions, we can compute the gradient of $\hat f_j$
-at any point $(\lambda_1, \lambda_2) \in \mathbb{R}^2$ by finite differences on
-a fine evaluation grid. Let $G_j(\lambda_1, \lambda_2)$ denote the 2-vector
-of partial derivatives:
-$$G_j = \left( \frac{\partial \hat f_j}{\partial \lambda_1}, \frac{\partial \hat f_j}{\partial \lambda_2} \right).$$
+The established construction adapts the back-projection trajectory of nonlinear
+biplots (Gower, Lubbe and le Roux, 2011): for marker values
+$\mu_1 < \cdots < \mu_R$, each $\mu_r$ is represented by one point of its contour
+line $\{\boldsymbol{\lambda} : \hat f_j(\boldsymbol{\lambda}) = \mu_r\}$, chosen
+independently of the others, and the chosen points are joined in marker order.
+Because the points are selected without reference to their neighbours, the axis
+is continuous but only piecewise linear, with sharp interior kinks; it
+approximates poorly the curve along which $x_j$ actually varies, and predicts
+poorly.
 
-This can be computed on a regular grid (default resolution $N = 60$) by
-centred differences on the smoothed field $\hat f_j(\lambda_1, \lambda_2)$.
-Points near the boundary of the grid (where one-sided differences are needed)
-are handled conservatively: their gradients are set to `NA` and the flow
-halts when it reaches one.
+We instead define the axis as the trajectory along which $\hat f_j$ increases
+most rapidly. As $\hat f_j$ is differentiable, this is the integral curve of its
+gradient field, smooth by construction.
 
-# Gradient-flow integration
+**Definition (gradient-flow axis).** Let $\hat f_j \in C^1(\Omega)$ with
+$\nabla \hat f_j \neq \mathbf{0}$ on a connected neighbourhood of
+$\boldsymbol{\lambda}_c$. The gradient-flow axis $\gamma_j : I \to \Omega$ is the
+maximal solution of
+$$\frac{d\gamma_j}{ds} =
+\frac{\nabla \hat f_j(\gamma_j(s))}{\lVert \nabla \hat f_j(\gamma_j(s)) \rVert},
+\qquad \gamma_j(0) = \boldsymbol{\lambda}_c, \tag{1}$$
+integrated in both directions of $s$ until it reaches $\partial\Omega$. A point
+$\gamma_j(s)$ is calibrated by $\hat f_j(\gamma_j(s))$, and marker $\mu$ is placed
+where $\hat f_j(\gamma_j(s)) = \mu$.
 
-The gradient-flow trajectory is the solution to the autonomous ODE
-$$\frac{d\boldsymbol{\lambda}(t)}{dt} = G_j(\boldsymbol{\lambda}(t)),$$
-where $\boldsymbol{\lambda}(t) = (\lambda_1(t), \lambda_2(t))$ is the position
-at time $t$. We integrate this numerically using fourth-order Runge-Kutta
-(RK4) with step size $h = 0.03$ (default) for up to 800 steps in each
-direction (forward and backward) from the starting point.
+`psaxis()` implements this: it evaluates $\hat f_j$ on a grid, forms
+$\nabla \hat f_j$ by central differences, and integrates (1) by fourth-order
+Runge–Kutta from the supported grid node nearest $\boldsymbol{\lambda}_c$.
 
-The starting point is the grid node (after filtering to supported cells) that
-is closest to the centroid of the sample coordinates. Integrating backwards as
-well as forwards ensures the axis spans the full range where the field is
-monotone.
+# Smoothness and orthogonality
 
-**Why RK4?** The method is robust to the condition of the surface, and because
-the loess smooths are locally well-behaved, four stages per step is enough.
-Adaptive step-size methods (like `rk45`) would be overkill; fixed small steps
-are stable.
+**Proposition 1 (smoothness).** *If $\hat f_j \in C^k(\Omega)$, $k \geq 1$, and
+$\nabla \hat f_j$ does not vanish along $\gamma_j$, then $\gamma_j \in C^k$.*
 
-The output is a polyline (sequence of vertices) that traces the gradient flow.
-Consecutive points that are very close (arc-length difference $< 10^{-6}$) are
-filtered as redundant.
+Where $\nabla \hat f_j \neq \mathbf{0}$ the unit field in (1) is $C^{k-1}$ and
+locally Lipschitz; by Picard–Lindelöf the solution exists and is unique, and by
+smooth dependence on a $C^{k-1}$ field, $\gamma_j \in C^k$. The axis is thus as
+smooth as the surface, in contrast to the merely continuous back-projection
+axis. `kink_max()` reports the largest turning angle of an axis after resampling
+to equal arc length; a gradient-flow axis registers only the curvature the
+contours genuinely demand, not spurious kinks.
 
-# Monotonicity criteria
+**Proposition 2 (orthogonality and monotone calibration).** *Along $\gamma_j$
+the calibration $s \mapsto \hat f_j(\gamma_j(s))$ is strictly increasing, with
+derivative $\lVert \nabla \hat f_j(\gamma_j(s)) \rVert > 0$, and $\gamma_j$
+crosses every contour line orthogonally.*
 
-Not every variable yields a valid axis. Two criteria filter out cases where
-monotone reading would be misleading.
+By the chain rule and (1),
+$\tfrac{d}{ds}\hat f_j(\gamma_j(s)) = \nabla \hat f_j^\top \dot\gamma_j =
+\lVert \nabla \hat f_j \rVert > 0$. The tangent $\dot\gamma_j$ is parallel to
+$\nabla \hat f_j$, which is normal to the level set, so $\gamma_j$ meets every
+contour orthogonally. Monotone calibration makes the axis unambiguously
+readable; the orthogonal crossings are the calibration marks, and express that
+motion along the axis is the most efficient way to change the variable.
 
-## Criterion 1: Interior extremum
+# Reduction to the linear biplot
 
-If $\hat f_j$ has a local maximum or minimum in the *interior* of the
-supported region, strictly bounded by cells with local data support, then no
-monotone axis can represent the full field. The contours loop around the
-extremum, and any attempt to draw a line through the middle either misses
-the extreme value entirely or crosses it non-monotonically.
+**Proposition 3 (linear limit).** *If the fitted surface is affine,
+$\mathbf{f}(\boldsymbol{\lambda}) = \mathbf{c} + \mathbf{B}\boldsymbol{\lambda}$ —
+as when $\mathbf{X}$ is exactly two-dimensional — then for each $j$ the
+gradient-flow axis is the straight line through $\boldsymbol{\lambda}_c$ in
+direction $\mathbf{b}_j$, the $j$th row of $\mathbf{B}$. This is the prediction
+biplot axis of the corresponding principal-component biplot.*
 
-This is detected by identifying:
-- The **boundary** of the supported region: cells with local data support
-  that are adjacent to unsupported cells.
-- The **interior**: cells with local data support that are not on the boundary.
+Affinity gives $\hat f_j(\boldsymbol{\lambda}) = c_j + \mathbf{b}_j^\top \boldsymbol{\lambda}$,
+so $\nabla \hat f_j = \mathbf{b}_j$ is constant and (1) integrates to the line
+$\gamma_j(s) = \boldsymbol{\lambda}_c + s\,\mathbf{b}_j / \lVert \mathbf{b}_j \rVert$.
+In the linear biplot $\hat x_j = \mathbf{b}_j^\top \boldsymbol{\lambda}$, so $x_j$
+is recovered by projecting $\boldsymbol{\lambda}$ onto $\mathbf{b}_j$; the two
+axes coincide in direction and calibration. The surface coordinates are
+determined only up to an orthogonal transformation of $\Omega$, under which this
+result is equivariant, so the coincidence is frame-independent. The method
+therefore contains the classical biplot as its affine special case — a sanity
+check the display should always pass on genuinely two-dimensional data.
 
-If any interior cell has a value exceeding the maximum of all boundary cells
-by more than $\delta \times (\text{range of } \hat f_j)$ (default $\delta = 0.05$),
-or falling below the minimum boundary value by the same margin, the variable
-is deferred. The margin $\delta$ prevents false positives at ragged edges
-where discrete grid cells create artificial steps.
+# Monotonicity: two criteria
 
-## Criterion 2: Coverage
+Definition (1) requires $\nabla \hat f_j \neq \mathbf{0}$. A single calibrated
+axis is meaningful only when $\hat f_j$ is monotone over the surface, i.e. has no
+interior extremum. If $\hat f_j$ attains an extremum at an interior
+$\boldsymbol{\lambda}^\star \in \mathrm{int}(\Omega)$ then
+$\nabla \hat f_j(\boldsymbol{\lambda}^\star) = \mathbf{0}$, the nearby level sets
+are closed curves encircling it, no integral curve can pass through it, and any
+axis would assign one value to a whole closed contour. The height coordinate of a
+hemisphere, whose contours are concentric circles, is the canonical instance.
 
-Even if monotone, an axis may span too little of the variable's observed
-range. We measure this by the **coverage**:
-$$\text{coverage} = \frac{\max(\text{axis calibration}) - \min(\text{axis calibration})}
-{\max(\hat f_j(\lambda_i)) - \min(\hat f_j(\lambda_i))},$$
-i.e., the fraction of the sample range that the axis actually spans. If this
-is less than `cover_min` (default 0.55), the axis is deferred because it is
-not capturing enough variation to be useful for biplot reading.
+Testing this through the vanishing of the *estimated* gradient is unreliable: a
+wiggly-but-monotone surface produces near-flat patches where
+$\lVert \nabla \hat f_j \rVert$ dips without an extremum. We therefore test the
+defining property of an extremum directly, through its value relative to the
+boundary.
 
-Low coverage typically signals a variable with curvature so complex that the
-steepest ascent route only touches one flank of the field, leaving the other
-flank better visible in contour form.
+**Criterion 1 (boundary-extremum test).** Let $\delta > 0$ and
+$r_j = \max_\Omega \hat f_j - \min_\Omega \hat f_j$. Variable $j$ is declared
+non-monotone if
+$$\max_{\mathrm{int}(\Omega)} \hat f_j > \max_{\partial\Omega} \hat f_j + \delta r_j
+\quad\text{or}\quad
+\min_{\mathrm{int}(\Omega)} \hat f_j < \min_{\partial\Omega} \hat f_j - \delta r_j,
+\tag{2}$$
+and monotone otherwise; a non-monotone variable is deferred to contour reading.
 
-## When to override
+The rationale is exact: a continuous function on $\Omega$ attains its extrema on
+$\partial\Omega$ unless it has an interior extremum, so an interior value beyond
+the entire boundary range certifies a genuine interior peak or basin, while the
+margin $\delta r_j$ guards against estimation noise. A monotone ramp — however
+curved — keeps its extreme values on the boundary and is passed. In the affine
+case of Proposition 3 the extrema lie on $\partial\Omega$, so the criterion never
+fires. In `psaxis()`, $\delta$ is the argument `delta` (default `0.05`).
 
-Both criteria are *display* decisions, not verdicts on the variable. A
-deferred variable is still fitted by loess, still predictable via
-`predict()`, and often the most interesting to understand via its contours.
-Pass `defer = FALSE` to `psaxis()` or to `plot()` to force an axis for every
-variable with a non-degenerate flow (Criteria 1 and 2 ignored), and inspect
-the returned `coverage` to see why deferral was the right call.
+Criterion 1 detects an interior extremum that is also the *global* extreme. A
+shallower local extremum, not global but still with $\nabla \hat f_j = \mathbf{0}$
+at an interior point, will not exceed the boundary range, yet it stalls the flow:
+the integral curve climbs into the local peak and stops, so the axis spans only
+part of the variable's range. This is caught after the axis is built, by its
+coverage.
 
-# Axis calibration
+**Criterion 2 (axis coverage).** Let
+$R_j = \max_i \hat f_j(\boldsymbol{\lambda}_i) - \min_i \hat f_j(\boldsymbol{\lambda}_i)$
+be the range of fitted values over the samples. The coverage is
+$$c_j = \frac{\max_s \hat f_j(\gamma_j(s)) - \min_s \hat f_j(\gamma_j(s))}{R_j}. \tag{3}$$
+If $c_j < c_{\min}$ the axis fails to span the variable and $j$ is deferred.
 
-Once the gradient-flow polyline is in place, each vertex must be labelled with
-the variable's value. We evaluate $\hat f_j$ at each vertex:
-$$\text{calibration}_k = \hat f_j(\boldsymbol{\lambda}_k),$$
-where $\boldsymbol{\lambda}_k$ is the $k$-th vertex of the polyline. These
-values are in the working (centred, optionally scaled) units; `plot()` and
-`predict()` back-transform them to the original units for display and
-prediction.
+Coverage measures the deliverable itself rather than inferring it from geometry:
+a trapping interior maximum, however shallow relative to $R_j$, truncates the
+calibrated range and drives $c_j$ down, whereas a genuinely monotone variable has
+$c_j \approx 1$. In `psaxis()`, $c_{\min}$ is `cover_min` (default `0.55`).
 
-This design ensures the calibration is consistent with the field the axis
-represents: small perturbations of $\boldsymbol{\lambda}$ along the polyline
-produce monotone changes in the calibration, because the polyline follows the
-gradient direction.
+A variable is given a calibrated axis only if it passes *both* criteria;
+otherwise it is read from contours, on which the closed level sets that defeat a
+single axis are read without ambiguity. The biplot is thus mixed by construction
+— monotone variables carry calibrated axes read by projection, folded variables
+are read from contours — mirroring the classical split between axis prediction
+and contour prediction. `plot.prinsurf` returns the deferred variables
+invisibly, and drawing their contours (with `contours =`) is the intended
+reading for them.
 
-# Reading the axis
+# Reading and prediction
 
-To predict variable $j$ for a sample at $\boldsymbol{\lambda}_i$, orthogonally
-project $\boldsymbol{\lambda}_i$ onto the axis polyline. This gives the closest
-point on the axis (in Euclidean distance), and the calibration value at that
-point is the prediction. The orthogonal projection method is:
+The surface supplies $\hat f_j(\boldsymbol{\lambda})$ for any coordinate. Two
+distinct notions of prediction follow, and it is essential to keep them apart.
 
-For each segment of the polyline (from vertex $k$ to $k+1$),
-parametrize it as $\mathbf{a} + t (\mathbf{b} - \mathbf{a})$ for $t \in [0, 1]$.
-The foot of the perpendicular from $\boldsymbol{\lambda}_i$ to this segment is
-at
-$$t^* = \frac{(\boldsymbol{\lambda}_i - \mathbf{a}) \cdot (\mathbf{b} - \mathbf{a})}{\lVert \mathbf{b} - \mathbf{a} \rVert^2},$$
-clamped to $[0, 1]$. Compute this for every segment, find the segment with
-minimum distance, and linearly interpolate the calibration value.
+*Surface prediction* reconstructs a sample's value as
+$\hat x^{\mathrm{surf}}_{ij} = \hat f_j(\boldsymbol{\lambda}_i)$. It uses the
+fitted surface alone, not the axis, and is the natural reconstruction of the
+embedding. This is what `fitted.prinsurf` returns and what `predictivity()`
+scores.
 
-**Why orthogonal projection?** It is symmetric in how it treats a sample
-relative to the axis, robust to axis curvature, and identical to the reading
-rule of a straight-line biplot axis when the axis is indeed straight. It is
-also the definition used in Gower's predictive-biplot tradition for
-computing axis predictive error.
+*Axis prediction* reads the value off the drawn axis: for a monotone variable,
+let $\boldsymbol{\lambda}_i^\star = \arg\min_{\boldsymbol{\lambda}\in\gamma_j}
+\lVert \boldsymbol{\lambda}_i - \boldsymbol{\lambda} \rVert$ be the orthogonal
+projection of $\boldsymbol{\lambda}_i$ onto the polyline; then
+$\hat x^{\mathrm{ax}}_{ij}$ is the calibration $\hat f_j$ interpolated linearly at
+$\boldsymbol{\lambda}_i^\star$. This is what a reader recovers by eye, and is the
+sense in which biplot axes are conventionally assessed. It is what
+`predict.prinsurf` returns for a monotone variable; for a deferred variable
+`predict` returns the surface value $\hat f_j(\boldsymbol{\lambda}_i)$ instead,
+which is the contour reading.
 
-# Comparison to alternatives
+The axis is therefore primarily a display device. Its fidelity is measured by how
+closely axis prediction tracks the data; we summarise it for variable $j$ by the
+standardised squared prediction error
+$$\mathrm{SSPE}_j = \frac{\sum_i (x_{ij} - \hat x^{\mathrm{ax}}_{ij})^2}
+{\sum_i (x_{ij} - \bar x_j)^2}, \tag{4}$$
+$0$ meaning exact recovery, $1$ no better than the mean.
+`axis_predictive_error()` reports the root of the numerator of (4) per axis — the
+standard predictive error, in the units of the working data.
 
-Two other designs were considered and rejected.
+The reason a single axis cannot in general recover the data exactly is geometric,
+and it determines where the surface's predictive advantage can and cannot be
+realised.
 
-**Back-projection to the principal-component plane.** Take the initial PCA
-plane, project each sample onto the nearest surface point, then project *that*
-back onto the plane. This loses information: the back-projected point is no
-longer on the surface, and the reading is not about the surface field at all.
+**Proposition 4 (exactness of axis reading).** *For a monotone variable, the
+orthogonal-projection reading equals the surface value,
+$\hat x^{\mathrm{ax}}_{ij} = \hat f_j(\boldsymbol{\lambda}_i)$ for every sample,
+if and only if the level sets of $\hat f_j$ are parallel straight lines (i.e.
+$\hat f_j$ is affine over the samples). When the contours curve, with
+$d_i = \lVert \boldsymbol{\lambda}_i - \boldsymbol{\lambda}_i^\star \rVert$ the
+off-axis distance,*
+$$\hat f_j(\boldsymbol{\lambda}_i) - \hat x^{\mathrm{ax}}_{ij} =
+\tfrac{1}{2}\,\kappa_i\, \lVert \nabla \hat f_j(\boldsymbol{\lambda}_i^\star) \rVert\, d_i^2
++ o(d_i^2), \tag{5}$$
+*where $\kappa_i$ is the curvature of the contour through
+$\boldsymbol{\lambda}_i^\star$.*
 
-**Independent calibration by ranking.** Find the sample with the highest
-variable value, the second-highest, etc., and mark those positions on the axis
-as calibration points. This is brittle when samples cluster, prone to
-outlier-driven calibration, and loses the connection between the axis's
-geometric path and the field it represents. Most critically, the axis itself
-is determined by gradient flow (a property of the fitted surface), while the
-calibration is data-driven; decoupling them invites inconsistency.
+By Proposition 2 the axis is tangent to $\nabla \hat f_j$, so the perpendicular to
+the axis at $\boldsymbol{\lambda}_i^\star$ is tangent to the contour there. The
+displacement $\boldsymbol{\lambda}_i - \boldsymbol{\lambda}_i^\star$ is to leading
+order along that perpendicular; expanding $\hat f_j$ from
+$\boldsymbol{\lambda}_i^\star$ in this direction, the first-order term vanishes
+because $\nabla \hat f_j$ is normal to the contour tangent, leaving the
+second-order term in (5). The error vanishes for all samples exactly when
+$\kappa_i \equiv 0$, i.e. straight contours.
 
-The gradient-flow approach integrates the geometry and the data naturally: the
-axis follows the field, and the calibration represents that same field.
+Single-axis reading is thus intrinsically lossy, in proportion to contour
+curvature and the *square* of off-axis distance, and is exact only in the affine
+limit. The surface itself carries no such loss — it uses the full position
+$\boldsymbol{\lambda}_i$ — so the representational advantage of the surface over a
+plane is recovered by reading from position (sample predictivity) and from
+contours for folded variables, not by projection onto one curved axis.
 
-# Implementation details
+## Which fidelity measure, and why $[0,1]$ fails
 
-**Grid resolution** (`N`, default 60): Higher values give smoother gradients
-but more computation. 60 is a good balance; go to 80–100 if you have many
-variables and a fast machine, or 40–50 for exploratory work.
+The bounded axis predictivity of the linear biplot — the ratio of predicted to
+total sum of squares, lying in $[0,1]$ — is bounded precisely because linear axis
+prediction is orthogonal projection onto a *subspace*, whence
+$\sum_i x_{ij}^2 = \sum_i (\hat x^{\mathrm{ax}}_{ij})^2 + \sum_i (x_{ij} - \hat x^{\mathrm{ax}}_{ij})^2$
+and the ratio equals $1 - \mathrm{SSPE}_j$. For a curved axis the reading is
+projection onto a *curve*, not a subspace; the Pythagorean decomposition fails,
+the ratio form is no longer confined to $[0,1]$, and the appropriate fidelity
+measure is the standard predictive error
+$\bigl(n^{-1}\sum_i (x_{ij} - \hat x^{\mathrm{ax}}_{ij})^2\bigr)^{1/2}$ of the
+predictive-biplot tradition, which assumes no subspace structure. This is why
+`axis_predictive_error()` reports an RMS error rather than a bounded ratio.
 
-**Step size** (`h`, default 0.03): Smaller values trace the flow more finely
-but integrate longer. 0.03 is conservative; if your axes look jagged, decrease
-it slightly. If they look over-smooth or integration takes too long, increase
-it.
+Surface prediction, by contrast, retains the bounded form:
+$\hat{\mathbf{f}}(\boldsymbol{\lambda}_i)$ is the nearest-point projection of
+$\mathbf{x}_i$ onto the fitted surface, for which the decomposition *does* hold,
+so sample predictivity
+$1 - \lVert \mathbf{x}_i - \hat{\mathbf{f}}(\boldsymbol{\lambda}_i) \rVert^2 /
+\lVert \mathbf{x}_i - \bar{\mathbf{x}} \rVert^2$ lies in $[0,1]$. This is the form
+`predictivity()` returns.
 
-**Max steps** (default 800): In each direction from the start. The flow stops
-early if it leaves the supported region or hits a degenerate point. 800 is
-plenty for practical datasets; lower it only if you are impatient.
+## What is established, and what is not
 
-**Boundary margin** (`delta`, default 0.05): If interior extrema exceed
-boundary values by less than this fraction of the range, they are tolerated.
-Increase to be stricter (defer more variables); decrease to be more lenient.
+Propositions 1–3 are theorems: the gradient-flow axis is smooth, crosses contours
+orthogonally with monotone calibration, and reduces to the linear biplot axis in
+the affine limit. Axis *prediction*, by contrast, is an empirical property. On
+smooth, single-mode surfaces the smooth axis follows the variable's variation
+closely and predicts at least as well as back-projection. On complex multi-modal
+surfaces a single steepest-ascent curve need not pass near samples lying off it,
+and axis prediction is then comparable to — and occasionally worse than —
+back-projection, even while the axis remains far smoother. The contribution is a
+smooth, well-defined, orthogonally calibrated axis with a principled monotonicity
+diagnostic, whose predictive reading is **competitive rather than uniformly
+superior**.
 
-**Coverage threshold** (`cover_min`, default 0.55): Variables with axis
-coverage below this are deferred. Lower values accept more variables with
-narrow coverage; higher values defer conservatively.
+# A robust discrete estimator
 
-# Example: the blanket surface
+When the estimated gradient field is noisy, the axis may instead be obtained by
+choosing one point per contour *jointly*, minimising a data-fidelity term plus a
+curvature penalty
+$\sum_r \lVert \boldsymbol{\lambda}_{r-1} - 2\boldsymbol{\lambda}_r + \boldsymbol{\lambda}_{r+1} \rVert^2$
+that couples adjacent markers. Because the penalty couples only neighbours, the
+global optimum follows by dynamic programming over the ordered contours, and its
+weight interpolates between the back-projection axis and a straight line. This is
+the internal energy of an active contour (Kass, Witkin and Terzopoulos, 1988). It
+is not the default in this package, which uses the gradient flow, but it is the
+natural fallback where the smoother is unreliable.
 
-We use the blanket data to visualize the gradient-flow principle.
+# Algorithm
 
-```{r blanket-setup}
-set.seed(1)
-n  <- 200
-s  <- runif(n, -1, 1)
-t  <- runif(n, -1, 1)
-e  <- function() runif(n, -0.05, 0.05)
-x1 <- s + e()
-x2 <- t + e()
-x3 <- 0.7 * s + 0.9 * t^2 + e()
-X  <- cbind(x1, x2, x3)
-colnames(X) <- c("x", "y", "z")
-fit_b <- prinsurf(X, verbose = FALSE)
-```
+For variable $j$, given sample coordinates $\{\boldsymbol{\lambda}_i\}$, fitted
+$\hat f_j$, grid size $N$, step $h$, and margin $\delta$:
 
-The $z$ coordinate has parabolic contours in the latent $(s, t)$ space.
-Its gradient-flow axis should follow the ridge of the parabola, bending
-smoothly. Let's inspect it:
+1. Evaluate $\hat f_j$ on an $N \times N$ grid over the bounding box of the
+   $\boldsymbol{\lambda}_i$.
+2. Define the support $\Omega$ as grid nodes within a density-scaled radius of a
+   sample; mask the rest. Estimate $\partial\Omega$ as supported nodes adjacent to
+   a masked node or the frame.
+3. If Criterion 1 holds, return non-monotone; defer to contour reading.
+4. Estimate $\nabla \hat f_j$ by central differences; interpolate bilinearly
+   off-grid.
+5. Integrate (1) from the supported node nearest $\boldsymbol{\lambda}_c$ by RK4
+   in both directions, stopping at $\partial\Omega$.
+6. Calibrate $\hat f_j$ along $\gamma_j$ and place markers by inverse
+   interpolation.
+7. If coverage $c_j < c_{\min}$ (Criterion 2), return non-monotone; defer.
 
-```{r blanket-z-axis}
-ax <- psaxis(fit_b, "z")
-print(ax)
-```
+This is `psaxis()`; steps 1–2 are shared with contour drawing through the
+internal grid helper.
 
-The axis has `r nrow(ax$axis)` vertices and spans calibration range
-`[`r round(min(ax$cal), 2)`, `r round(max(ax$cal), 2)`]` in working units,
-with `r sprintf("%.2f", ax$coverage)` coverage. Plot it on the surface:
+# Estimation
 
-```{r blanket-z-plot}
-plot(fit_b, vars = "z", contours = "z", col_contour = "lightblue")
-```
-
-The axis (black, with tick marks) follows the valley of the contours,
-staying orthogonal to them. Its path is smooth and monotone in the displayed
-calibration, even though the contours themselves are curved. This is exactly
-what the gradient flow achieves: it finds the direction of steepest ascent
-and follows it faithfully.
-
-Compare this to what a forced straight axis would show (by setting
-`defer = FALSE`):
-
-```{r blanket-z-straight, eval=FALSE}
-ax_straight <- psaxis(fit_b, "z", defer = FALSE)
-# This would show an axis that tries to be linear but fails to track
-# the parabolic field — gaps in coverage, or overshooting into contours.
-```
-
-The gradient-flow axis is better because it adapts to the geometry.
+The surface is fitted by the expectation/projection algorithm with $\hat f_j$
+estimated by local regression (`prinsurf()`). The support radius scales as the
+bounding-box diagonal divided by $\sqrt n$, adapting to sample density and
+preventing the smoother's extrapolation beyond the data from creating spurious
+gradients or spurious interior extrema. Grid evaluation and differencing are
+$O(N^2)$ per variable and the integration is $O(1/h)$ in the number of steps, so
+axis construction is inexpensive relative to fitting the surface.
 
 # References
 
 Gower, J.C. and Hand, D.J. (1996). *Biplots*. Chapman & Hall, London.
 
-Gower, J.C., Lubbe, S. and le Roux, N. (2011). *Understanding Biplots*.
-Wiley, Chichester.
+Gower, J.C., Lubbe, S. and le Roux, N. (2011). *Understanding Biplots*. Wiley,
+Chichester.
 
-Hastie, T. and Stuetzle, W. (1989). Principal curves.
-*Journal of the American Statistical Association*, **84**, 502–516.
+Hastie, T. and Stuetzle, W. (1989). Principal curves. *Journal of the American
+Statistical Association*, **84**, 502–516.
 
-Le Roux, B. and Rouanet, H. (2004). *Geometric Data Analysis: From
-Correspondence Analysis to Structured Data Analysis*. Kluwer Academic
-Publishers.
+Kass, M., Witkin, A. and Terzopoulos, D. (1988). Snakes: active contour models.
+*International Journal of Computer Vision*, **1**, 321–331.
