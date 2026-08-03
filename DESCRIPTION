@@ -1,0 +1,24 @@
+Package: prinsurf
+Type: Package
+Title: Principal Surface Contour Biplots
+Version: 2.0
+Authors@R: c(
+    person("Raeesa", "Ganey", role = c("aut", "cre"),
+           email = "raeesa.ganey@wits.ac.za"))
+Description: Fits principal surfaces (Hastie and Stuetzle, 1989) and displays
+    them as biplots in which each variable is read from the contour lines of
+    its fitted surface coordinate function, together with sample predictivity
+    -- the proportion of each sample's squared length reconstructed by the
+    fitted surface -- as a diagnostic of overall surface fit. The implementation
+    is base-R only.
+License: GPL-3
+Encoding: UTF-8
+Depends: R (>= 4.1.0)
+Imports: stats, graphics, grDevices
+Suggests: testthat (>= 3.0.0), knitr, rmarkdown, biplotEZ
+VignetteBuilder: knitr
+NeedsCompilation: no
+Packaged: 2026-06-26 19:10:48 UTC; root
+Author: Raeesa Ganey [aut, cre]
+Maintainer: Raeesa Ganey <raeesa.ganey@wits.ac.za>
+Config/roxygen2/version: 8.0.0
