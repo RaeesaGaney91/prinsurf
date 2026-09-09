@@ -70,18 +70,6 @@
 <code class="sourceCode R"><span><span class="kw"><a href="https://rdrr.io/r/base/library.html" class="external-link">library</a></span><span class="op">(</span><span class="va"><a href="https://devtools.r-lib.org/" class="external-link">devtools</a></span><span class="op">)</span></span>
 <span><span class="fu">install_github</span><span class="op">(</span><span class="st">"RaeesaGaney91/prinsurf"</span><span class="op">)</span></span></code></pre></div>
 </div>
-<div class="section level2">
-<h2 id="example">Example<a class="anchor" aria-label="anchor" href="#example"></a>
-</h2>
-<div class="sourceCode" id="cb2"><pre class="downlit sourceCode r">
-<code class="sourceCode R"><span><span class="va">fit</span> <span class="op">&lt;-</span> <span class="fu"><a href="reference/prinsurf.html">prinsurf</a></span><span class="op">(</span><span class="va">X</span>, scale <span class="op">=</span> <span class="cn">TRUE</span><span class="op">)</span>          <span class="co"># X: n x p numeric matrix</span></span>
-<span><span class="va">fit</span>                                        <span class="co"># summary</span></span>
-<span><span class="fu"><a href="https://rdrr.io/r/graphics/plot.default.html" class="external-link">plot</a></span><span class="op">(</span><span class="va">fit</span>, group <span class="op">=</span> <span class="va">my_factor</span><span class="op">)</span>               <span class="co"># bare biplot (sample coordinates only)</span></span>
-<span><span class="fu"><a href="https://rdrr.io/r/graphics/plot.default.html" class="external-link">plot</a></span><span class="op">(</span><span class="va">fit</span>, vars <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/colnames.html" class="external-link">colnames</a></span><span class="op">(</span><span class="va">X</span><span class="op">)</span>, group <span class="op">=</span> <span class="va">my_factor</span><span class="op">)</span>  <span class="co"># one contour panel per variable</span></span>
-<span><span class="fu"><a href="https://rdrr.io/r/stats/predict.html" class="external-link">predict</a></span><span class="op">(</span><span class="va">fit</span>, <span class="st">"my_var"</span><span class="op">)</span>                     <span class="co"># per-sample values read off that variable's contours</span></span>
-<span><span class="fu"><a href="reference/contour_predictive_error.html">contour_predictive_error</a></span><span class="op">(</span><span class="va">fit</span><span class="op">)</span>              <span class="co"># per-variable RMS contour-reading error</span></span>
-<span><span class="fu"><a href="reference/predictivity.html">predictivity</a></span><span class="op">(</span><span class="va">fit</span><span class="op">)</span>                          <span class="co"># per-sample predictivity</span></span></code></pre></div>
-</div>
 </div>
   </main><aside class="col-md-3"><div class="links">
 <h2 data-toc-skip>Links</h2>
