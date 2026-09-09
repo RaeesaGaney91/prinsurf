@@ -609,14 +609,6 @@ padding-top: 0px;
 <p>You can install the development version of prinsurf from <a href="https://github.com/">GitHub</a> with:</p>
 <div class="sourceCode" id="cb1"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb1-1"><a href="#cb1-1" tabindex="-1"></a><span class="fu">library</span>(devtools)</span>
 <span id="cb1-2"><a href="#cb1-2" tabindex="-1"></a><span class="fu">install_github</span>(<span class="st">&quot;RaeesaGaney91/prinsurf&quot;</span>)</span></code></pre></div>
-<h2 id="example">Example</h2>
-<div class="sourceCode" id="cb2"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb2-1"><a href="#cb2-1" tabindex="-1"></a>fit <span class="ot">&lt;-</span> <span class="fu">prinsurf</span>(X, <span class="at">scale =</span> <span class="cn">TRUE</span>)          <span class="co"># X: n x p numeric matrix</span></span>
-<span id="cb2-2"><a href="#cb2-2" tabindex="-1"></a>fit                                        <span class="co"># summary</span></span>
-<span id="cb2-3"><a href="#cb2-3" tabindex="-1"></a><span class="fu">plot</span>(fit, <span class="at">group =</span> my_factor)               <span class="co"># bare biplot (sample coordinates only)</span></span>
-<span id="cb2-4"><a href="#cb2-4" tabindex="-1"></a><span class="fu">plot</span>(fit, <span class="at">vars =</span> <span class="fu">colnames</span>(X), <span class="at">group =</span> my_factor)  <span class="co"># one contour panel per variable</span></span>
-<span id="cb2-5"><a href="#cb2-5" tabindex="-1"></a><span class="fu">predict</span>(fit, <span class="st">&quot;my_var&quot;</span>)                     <span class="co"># per-sample values read off that variable&#39;s contours</span></span>
-<span id="cb2-6"><a href="#cb2-6" tabindex="-1"></a><span class="fu">contour_predictive_error</span>(fit)              <span class="co"># per-variable RMS contour-reading error</span></span>
-<span id="cb2-7"><a href="#cb2-7" tabindex="-1"></a><span class="fu">predictivity</span>(fit)                          <span class="co"># per-sample predictivity</span></span></code></pre></div>
 
 </body>
 </html>
