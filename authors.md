@@ -2,7 +2,7 @@
 
 ## Authors
 
-- **Raeesa Ganey**. Author, maintainer.
+- **Raeesa Ganey**. Author, maintainer, copyright holder.
 
 ## Citation
 
