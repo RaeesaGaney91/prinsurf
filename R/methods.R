@@ -26,29 +26,63 @@ print.prinsurf <- function(x, ...) {
 #' @param asp Aspect ratio of each panel; the default \code{1} keeps the two
 #'   surface coordinates on a common scale, so distances in the biplot are
 #'   comparable in every direction.
+#' @param main Panel title(s), replacing the default (the variable's name, or no
+#'   title when \code{vars} is not given). A single string titles every panel;
+#'   a vector titles the panels in the order of \code{vars} and is recycled to
+#'   that length. Use \code{""} for no panel titles.
+#' @param outer_main A single title for the figure as a whole, drawn in the
+#'   outer margin above the panels. Can be combined with \code{main}, which
+#'   titles the individual panels.
 #' @param ... Passed to each panel's initial \code{plot}.
 #' @return Invisibly, \code{vars}.
+#' @examples
+#' set.seed(1)
+#' s <- runif(120, -1, 1); t <- runif(120, -1, 1)
+#' X <- cbind(x = s, y = t, z = 0.7 * s + 0.9 * t^2) +
+#'      matrix(rnorm(360, 0, 0.03), 120, 3)
+#' fit <- prinsurf(X, max.iter = 6)
+#'
+#' ## default: each panel is titled with its variable's name
+#' plot(fit, vars = c("x", "z"))
+#'
+#' ## your own panel titles, and a title for the figure as a whole
+#' plot(fit, vars = c("x", "z"),
+#'      main = c("First coordinate", "Third coordinate"),
+#'      outer_main = "Principal-surface biplot")
+#'
+#' ## a title on a single, contour-free panel
+#' plot(fit, main = "Sample coordinates")
 #' @export
 plot.prinsurf <- function(x, vars = NULL, group = NULL,
                           col_contour = "grey40", nlevels = 6,
-                          pch = 16, cex = 0.7, asp = 1, ...) {
+                          pch = 16, cex = 0.7, asp = 1,
+                          main = NULL, outer_main = NULL, ...) {
   lam <- x$lambda
   rng <- apply(lam, 2, range); pad <- 0.28 * (rng[2, ] - rng[1, ])
   cols <- if (is.null(group)) "grey60" else
     grDevices::hcl.colors(nlevels(as.factor(group)), "Dark 3")[as.integer(as.factor(group))]
 
   npanel <- max(length(vars), 1)
+  ## default panel titles are the variable names; user titles are recycled
+  main <- if (is.null(main)) {
+    if (length(vars)) vars else ""
+  } else rep_len(as.character(main), npanel)
+
+  pars <- list()
   if (npanel > 1) {
     nc <- ceiling(sqrt(npanel)); nr <- ceiling(npanel / nc)
-    op <- graphics::par(mfrow = c(nr, nc)); on.exit(graphics::par(op))
+    pars$mfrow <- c(nr, nc)
   }
+  ## room above the panels for the figure title
+  if (!is.null(outer_main)) pars$oma <- c(0, 0, 3, 0)
+  if (length(pars)) { op <- do.call(graphics::par, pars); on.exit(graphics::par(op)) }
 
   for (i in seq_len(npanel)) {
     v <- if (length(vars)) vars[i] else NULL
     graphics::plot(lam, pch = pch, cex = cex, col = cols, axes = FALSE, asp = asp,
                    xlim = rng[, 1] + c(-pad[1], pad[1]), ylim = rng[, 2] + c(-pad[2], pad[2]),
                    xlab = expression(lambda[1]), ylab = expression(lambda[2]),
-                   main = if (is.null(v)) "" else v, ...)
+                   main = main[i], ...)
     graphics::box()
     if (!is.null(v)) {
       g <- .ps_grid(x, v)
@@ -60,6 +94,8 @@ plot.prinsurf <- function(x, vars = NULL, group = NULL,
                        col = grDevices::hcl.colors(nlevels(as.factor(group)), "Dark 3"),
                        pch = pch, bty = "n", cex = 0.7)
   }
+  if (!is.null(outer_main))
+    graphics::title(main = outer_main, outer = TRUE, cex.main = 1.3)
   invisible(vars)
 }
 

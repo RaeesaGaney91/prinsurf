@@ -13,6 +13,8 @@
   pch = 16,
   cex = 0.7,
   asp = 1,
+  main = NULL,
+  outer_main = NULL,
   ...
 )
 }
@@ -34,6 +36,15 @@ scatter of sample coordinates).}
 surface coordinates on a common scale, so distances in the biplot are
 comparable in every direction.}
 
+\item{main}{Panel title(s), replacing the default (the variable's name, or no
+title when \code{vars} is not given). A single string titles every panel;
+a vector titles the panels in the order of \code{vars} and is recycled to
+that length. Use \code{""} for no panel titles.}
+
+\item{outer_main}{A single title for the figure as a whole, drawn in the
+outer margin above the panels. Can be combined with \code{main}, which
+titles the individual panels.}
+
 \item{...}{Passed to each panel's initial \code{plot}.}
 }
 \value{
@@ -46,4 +57,22 @@ variable's contour lines - the surface's analogue of a biplot axis, read by
 interpolating between contour lines rather than by projection onto a single
 calibrated axis. With no \code{vars}, a single panel of sample coordinates is
 drawn with no contours.
+}
+\examples{
+set.seed(1)
+s <- runif(120, -1, 1); t <- runif(120, -1, 1)
+X <- cbind(x = s, y = t, z = 0.7 * s + 0.9 * t^2) +
+     matrix(rnorm(360, 0, 0.03), 120, 3)
+fit <- prinsurf(X, max.iter = 6)
+
+## default: each panel is titled with its variable's name
+plot(fit, vars = c("x", "z"))
+
+## your own panel titles, and a title for the figure as a whole
+plot(fit, vars = c("x", "z"),
+     main = c("First coordinate", "Third coordinate"),
+     outer_main = "Principal-surface biplot")
+
+## a title on a single, contour-free panel
+plot(fit, main = "Sample coordinates")
 }

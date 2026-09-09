@@ -55,6 +55,16 @@ Any subset can be requested:
 plot(fit, vars = c("Petal.Length", "Petal.Width"), group = iris$Species)
 ```
 
+Each panel is titled with its variable's name by default. `main` replaces
+those titles -- one string for every panel, or one per panel in the order of
+`vars` -- and `outer_main` puts a single title above the figure as a whole:
+
+```{r plot-titles}
+plot(fit, vars = c("Petal.Length", "Petal.Width"), group = iris$Species,
+     main = c("Petal length (cm)", "Petal width (cm)"),
+     outer_main = "Iris contour biplot")
+```
+
 ## Reading the variables: predict() and its error
 
 `predict()` reads every variable's value for each sample off that variable's
