@@ -5,3 +5,8 @@
 ^pkgdown$
 ^\.github$
 ^LICENSE\.md$
+^CRAN-SUBMISSION$
+^cran-comments\.md$
+^README\.Rmd$
+^README\.html$
+^figure$

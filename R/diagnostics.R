@@ -10,7 +10,7 @@
 #' @export
 predictivity <- function(object) {
   X <- object$X                       # working (centred / scaled) data
-  Xhat <- fitted(object)
+  Xhat <- stats::fitted(object)
   Xc <- scale(X, scale = FALSE)
   sst <- rowSums(Xc^2)
   pred <- 1 - rowSums((X - Xhat)^2) / sst
