@@ -11,16 +11,19 @@ contour_predictive_error(object)
 }
 \value{
 A named numeric vector of per-variable RMS contour-reading errors,
-  with the mean over all variables as the attribute \code{"overall"}.
+  with the mean over all variables as the attribute \code{"overall"} and the
+  number of unreadable samples as the attribute \code{"n.unread"}.
 }
 \description{
 For each variable, the root-mean-square difference between the value read
 from the variable's contour lines at each sample's biplot position (as
 \code{\link{predict.prinsurf}} does) and the sample's actual value. This
-measures how much is lost by reading a variable off its contours rather than
-from the sample's full reconstructed position (see
-\code{\link{predictivity}}); lower is better, in the units of the working
-data.
+measures how accurately a variable can be recovered by reading its contours,
+combining the surface's lack of fit for that variable with the small loss
+from interpolating between contour lines; lower is better, in the units of
+the working data. Samples that fall outside the supported part of the
+contour grid cannot be read and are excluded; their number is returned as the
+attribute \code{"n.unread"}.
 }
 \seealso{
 \code{\link{predictivity}} for whole-sample reconstruction.

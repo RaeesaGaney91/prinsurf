@@ -12,10 +12,29 @@
 \item{...}{Ignored.}
 }
 \value{
-An \eqn{n \times p} matrix of fitted values.
+An \eqn{n \times p} matrix of fitted values, in working
+  (centred, optionally scaled) units.
 }
 \description{
 Returns the fitted surface values \eqn{\hat f_j(\lambda_i)} for every sample
-and variable -- the principal-surface reconstruction of the data, which
-underlies its sample predictivity.
+and variable: the point on the surface at which sample \eqn{i} sits, written
+back in the coordinates of the original variables. Row \eqn{i} is the
+surface's reconstruction of sample \eqn{i} -- what the fit says the sample
+would be if it lay exactly on the surface -- and the residual
+\eqn{x_i - \hat f(\lambda_i)} is the part of the sample the surface does not
+capture, which is what \code{\link{predictivity}} summarises.
+}
+\details{
+Values are in the working units used for fitting: centred, and divided by
+each variable's standard deviation if the surface was fitted with
+\code{scale = TRUE}. This is the scale on which residuals and
+\code{\link{predictivity}} are computed. \code{\link{predict.prinsurf}}
+differs in two ways: it reads values off the plotted contour grid rather than
+evaluating the coordinate functions exactly, and it returns them on the
+variables' original scales.
+}
+\seealso{
+\code{\link{predictivity}} for the per-sample quality of this
+  reconstruction, and \code{\link{predict.prinsurf}} for the values a reader
+  obtains from the contours.
 }

@@ -2,27 +2,30 @@
 % Please edit documentation in R/methods.R
 \name{predict.prinsurf}
 \alias{predict.prinsurf}
-\title{Predict a variable's values from the biplot}
+\title{Predict all variables from the biplot contours}
 \usage{
-\method{predict}{prinsurf}(object, var, ...)
+\method{predict}{prinsurf}(object, ...)
 }
 \arguments{
 \item{object}{A \code{"prinsurf"} object.}
 
-\item{var}{Variable name or index.}
-
 \item{...}{Ignored.}
 }
 \value{
-A numeric vector of predicted values, one per sample, on the
-  variable's original scale.
+An \eqn{n \times p} matrix of values read from the contours, on the
+  variables' original scales, with \code{NA} rows where the biplot cannot be
+  read.
 }
 \description{
-Predicts each sample's value of \code{var} by reading it off the variable's
-contour lines at the sample's biplot position \eqn{\lambda_i} -- the same
+Reads every variable's value for every sample off that variable's contour
+lines at the sample's biplot position \eqn{\lambda_i} -- the same
 interpolation used to draw the contours in \code{\link{plot.prinsurf}}.
+Values come from the contour grid alone: a sample whose position is not
+covered by the supported part of the grid has no contours to read, and is
+returned as \code{NA} for every variable.
 }
 \seealso{
 \code{\link{contour_predictive_error}} to measure this reading
-  against the variable's actual values.
+  against the variables' actual values, and \code{\link{fitted.prinsurf}}
+  for the surface's own reconstruction of the data.
 }

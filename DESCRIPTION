@@ -5,12 +5,13 @@ Version: 2.0
 Authors@R: c(
     person("Raeesa", "Ganey", role = c("aut", "cre"),
            email = "raeesa.ganey@wits.ac.za"))
-Description: Fits principal surfaces (Hastie and Stuetzle, 1989) and displays
-    them as biplots in which each variable is read from the contour lines of
-    its fitted surface coordinate function, together with sample predictivity
-    -- the proportion of each sample's squared length reconstructed by the
-    fitted surface -- as a diagnostic of overall surface fit. The implementation
-    is base-R only.
+Description: Fits principal surfaces, the two-dimensional generalisation of the
+    principal curves of Hastie and Stuetzle (1989)
+    <doi:10.1080/01621459.1989.10478797>, and displays them as biplots in which
+    each variable is read off the contour lines of its fitted surface coordinate
+    function. Sample predictivity, the proportion of a sample's squared length
+    that is reconstructed by the fitted surface, is reported as a per-sample
+    diagnostic of how well the surface represents the data.
 License: GPL-3
 Encoding: UTF-8
 Depends: R (>= 4.1.0)

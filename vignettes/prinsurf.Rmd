@@ -21,8 +21,8 @@ A **principal surface** (Hastie & Stuetzle, 1989) is a smooth curved
 two-dimensional manifold fitted through a data set, generalising the first two
 principal components to nonlinear structure. `prinsurf` fits such a surface and
 displays it as a biplot: the samples are plotted at their surface coordinates
-\(\boldsymbol\lambda_i\), and each variable is shown as the contour lines of its
-fitted coordinate function \(\hat f_j(\boldsymbol\lambda)\) over that plane.
+$\boldsymbol\lambda_i$, and each variable is shown as the contour lines of its
+fitted coordinate function $\widehat{f\mkern-2mu}_j(\boldsymbol\lambda)$ over that plane.
 A variable's value for a sample is read off by locating the sample among the
 contour lines, the direct nonlinear generalisation of reading a straight biplot
 axis.
@@ -56,17 +56,26 @@ Any subset can be requested:
 plot(fit, vars = c("Petal.Length", "Petal.Width"), group = iris$Species)
 ```
 
-## Reading a variable: predict() and its error
+## Reading the variables: predict() and its error
 
-`predict()` reads a variable's value for each sample off that variable's
-contour lines at the sample's biplot position \(\lambda_i\) -- the same
-interpolation used to draw the contours above.
+`predict()` reads every variable's value for each sample off that variable's
+contour lines at the sample's biplot position $\boldsymbol\lambda_i$, the same
+interpolation used to draw the contours above and returns an $n \times p$
+matrix on the variables' original scales. Values come from the contour grid
+alone; a sample whose position is not covered by the supported part of the grid
+has no contours to read and is returned as `NA`.
 
 ```{r predict-iris}
-phat <- predict(fit, "Petal.Length")
-head(phat)
-head(iris$Petal.Length)
+phat <- predict(fit)
+head(round(phat, 2))
+head(iris[, 1:4])
 ```
+
+Note that `predict()` and `fitted()` answer different questions. `fitted()`
+gives $\widehat{f\mkern-2mu}(\boldsymbol\lambda_i)$ exactly, in the centred/scaled units used for
+fitting -- the surface's own reconstruction of each sample. `predict()` gives
+what a reader interpolating between the printed contour lines would obtain, on
+the original measurement scales.
 
 `contour_predictive_error()` measures this reading against the samples'
 actual values, per variable, as a root-mean-square error in the working
@@ -81,9 +90,9 @@ contour_predictive_error(fit)
 Two diagnostics look at surface fit from different angles: `contour_predictive_error()`
 above measures reading *one variable at a time* from its contours,
 while **sample predictivity** asks how well the surface reconstructs each
-*whole* sample, \(\hat{\boldsymbol x}_i = \hat f(\boldsymbol\lambda_i)\), as the
+*whole* sample, $\widehat{\boldsymbol x\mkern-3mu}_i = \widehat{f\mkern-2mu}(\boldsymbol\lambda_i)$, as the
 proportion of the sample's squared length that the fit recovers,
-\(1 - \lVert x_i - \hat f(\lambda_i) \rVert^2 / \lVert x_i \rVert^2\). It is
+$1 - \lVert \boldsymbol x_i - \widehat{f\mkern-2mu}(\boldsymbol\lambda_i) \rVert^2 / \lVert \boldsymbol x_i \rVert^2$. It is
 read from the sample's *position* on the surface and is the principal-surface
 analogue of biplot sample predictivity.
 
@@ -131,14 +140,14 @@ biplotEZ::biplot(data = S) |> biplotEZ::PCA() |> plot()
 ```
 
 The samples form a hollow ring: the two leading principal components recover
-only `y` and `z`, and `x` -- almost orthogonal to that plane -- collapses to
+only `y` and `z`, and `x` almost orthogonal to that plane collapses to
 near-zero variation across it. Every sample near the middle of the height
 range sits close to the same spot regardless of its actual `x`, because a
 straight axis for `x` cannot express its interior maximum. The contour
 biplot's curved surface follows that maximum instead of flattening it away.
 
-Sample predictivity makes the same point numerically, and -- unlike the
-near-planar iris data above -- the gap here is large:
+Sample predictivity makes the same point numerically, and unlike the
+near-planar iris data above the gap here is large:
 
 ```{r sphere-predictivity}
 ps  <- mean(predictivity(sph))
