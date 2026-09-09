@@ -3,7 +3,7 @@ Type: Package
 Title: Principal Surface Contour Biplots
 Version: 2.0
 Authors@R: c(
-    person("Raeesa", "Ganey", role = c("aut", "cre"),
+    person("Raeesa", "Ganey", role = c("aut", "cre", "cph"),
            email = "raeesa.ganey@wits.ac.za"))
 Description: Fits principal surfaces, the two-dimensional generalisation of the
     principal curves of Hastie and Stuetzle (1989)
@@ -12,7 +12,7 @@ Description: Fits principal surfaces, the two-dimensional generalisation of the
     function. Sample predictivity, the proportion of a sample's squared length
     that is reconstructed by the fitted surface, is reported as a per-sample
     diagnostic of how well the surface represents the data.
-License: GPL-3
+License: MIT + file LICENSE
 URL: https://raeesaganey91.github.io/prinsurf/, https://github.com/RaeesaGaney91/prinsurf
 BugReports: https://github.com/RaeesaGaney91/prinsurf/issues
 Encoding: UTF-8
@@ -22,6 +22,6 @@ Suggests: testthat (>= 3.0.0), knitr, rmarkdown, biplotEZ
 VignetteBuilder: knitr
 NeedsCompilation: no
 Packaged: 2026-06-26 19:10:48 UTC; root
-Author: Raeesa Ganey [aut, cre]
+Author: Raeesa Ganey [aut, cre, cph]
 Maintainer: Raeesa Ganey <raeesa.ganey@wits.ac.za>
 Config/roxygen2/version: 8.0.0
