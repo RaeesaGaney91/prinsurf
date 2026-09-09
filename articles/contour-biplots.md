@@ -56,6 +56,20 @@ plot(fit, vars = c("Petal.Length", "Petal.Width"), group = iris$Species)
 
 ![](contour-biplots_files/figure-html/plot-subset-1.png)
 
+Each panel is titled with its variable’s name by default. `main`
+replaces those titles – one string for every panel, or one per panel in
+the order of `vars` – and `outer_main` puts a single title above the
+figure as a whole:
+
+``` r
+
+plot(fit, vars = c("Petal.Length", "Petal.Width"), group = iris$Species,
+     main = c("Petal length (cm)", "Petal width (cm)"),
+     outer_main = "Iris contour biplot")
+```
+
+![](contour-biplots_files/figure-html/plot-titles-1.png)
+
 ## Reading the variables: predict() and its error
 
 [`predict()`](https://rdrr.io/r/stats/predict.html) reads every

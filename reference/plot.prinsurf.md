@@ -20,6 +20,8 @@ plot(
   pch = 16,
   cex = 0.7,
   asp = 1,
+  main = NULL,
+  outer_main = NULL,
   ...
 )
 ```
@@ -57,6 +59,19 @@ plot(
   coordinates on a common scale, so distances in the biplot are
   comparable in every direction.
 
+- main:
+
+  Panel title(s), replacing the default (the variable's name, or no
+  title when `vars` is not given). A single string titles every panel; a
+  vector titles the panels in the order of `vars` and is recycled to
+  that length. Use `""` for no panel titles.
+
+- outer_main:
+
+  A single title for the figure as a whole, drawn in the outer margin
+  above the panels. Can be combined with `main`, which titles the
+  individual panels.
+
 - ...:
 
   Passed to each panel's initial `plot`.
@@ -64,3 +79,26 @@ plot(
 ## Value
 
 Invisibly, `vars`.
+
+## Examples
+
+``` r
+set.seed(1)
+s <- runif(120, -1, 1); t <- runif(120, -1, 1)
+X <- cbind(x = s, y = t, z = 0.7 * s + 0.9 * t^2) +
+     matrix(rnorm(360, 0, 0.03), 120, 3)
+fit <- prinsurf(X, max.iter = 6)
+
+## default: each panel is titled with its variable's name
+plot(fit, vars = c("x", "z"))
+
+
+## your own panel titles, and a title for the figure as a whole
+plot(fit, vars = c("x", "z"),
+     main = c("First coordinate", "Third coordinate"),
+     outer_main = "Principal-surface biplot")
+
+
+## a title on a single, contour-free panel
+plot(fit, main = "Sample coordinates")
+```

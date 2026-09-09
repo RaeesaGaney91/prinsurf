@@ -66,6 +66,8 @@ drawn with no contours.</p>
 <span>  pch <span class="op">=</span> <span class="fl">16</span>,</span>
 <span>  cex <span class="op">=</span> <span class="fl">0.7</span>,</span>
 <span>  asp <span class="op">=</span> <span class="fl">1</span>,</span>
+<span>  main <span class="op">=</span> <span class="cn">NULL</span>,</span>
+<span>  outer_main <span class="op">=</span> <span class="cn">NULL</span>,</span>
 <span>  <span class="va">...</span></span>
 <span><span class="op">)</span></span></code></pre></div>
     </div>
@@ -105,6 +107,19 @@ surface coordinates on a common scale, so distances in the biplot are
 comparable in every direction.</p></dd>
 
 
+<dt id="arg-main">main<a class="anchor" aria-label="anchor" href="#arg-main"></a></dt>
+<dd><p>Panel title(s), replacing the default (the variable's name, or no
+title when <code>vars</code> is not given). A single string titles every panel;
+a vector titles the panels in the order of <code>vars</code> and is recycled to
+that length. Use <code>""</code> for no panel titles.</p></dd>
+
+
+<dt id="arg-outer-main">outer_main<a class="anchor" aria-label="anchor" href="#arg-outer-main"></a></dt>
+<dd><p>A single title for the figure as a whole, drawn in the
+outer margin above the panels. Can be combined with <code>main</code>, which
+titles the individual panels.</p></dd>
+
+
 <dt id="arg--">...<a class="anchor" aria-label="anchor" href="#arg--"></a></dt>
 <dd><p>Passed to each panel's initial <code>plot</code>.</p></dd>
 
@@ -114,6 +129,29 @@ comparable in every direction.</p></dd>
     <p>Invisibly, <code>vars</code>.</p>
     </div>
 
+    <div class="section level2">
+    <h2 id="ref-examples">Examples<a class="anchor" aria-label="anchor" href="#ref-examples"></a></h2>
+    <div class="sourceCode"><pre class="sourceCode r"><code><span class="r-in"><span><span class="fu"><a href="https://rdrr.io/r/base/Random.html" class="external-link">set.seed</a></span><span class="op">(</span><span class="fl">1</span><span class="op">)</span></span></span>
+<span class="r-in"><span><span class="va">s</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/stats/Uniform.html" class="external-link">runif</a></span><span class="op">(</span><span class="fl">120</span>, <span class="op">-</span><span class="fl">1</span>, <span class="fl">1</span><span class="op">)</span>; <span class="va">t</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/stats/Uniform.html" class="external-link">runif</a></span><span class="op">(</span><span class="fl">120</span>, <span class="op">-</span><span class="fl">1</span>, <span class="fl">1</span><span class="op">)</span></span></span>
+<span class="r-in"><span><span class="va">X</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/cbind.html" class="external-link">cbind</a></span><span class="op">(</span>x <span class="op">=</span> <span class="va">s</span>, y <span class="op">=</span> <span class="va">t</span>, z <span class="op">=</span> <span class="fl">0.7</span> <span class="op">*</span> <span class="va">s</span> <span class="op">+</span> <span class="fl">0.9</span> <span class="op">*</span> <span class="va">t</span><span class="op">^</span><span class="fl">2</span><span class="op">)</span> <span class="op">+</span></span></span>
+<span class="r-in"><span>     <span class="fu"><a href="https://rdrr.io/r/base/matrix.html" class="external-link">matrix</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/stats/Normal.html" class="external-link">rnorm</a></span><span class="op">(</span><span class="fl">360</span>, <span class="fl">0</span>, <span class="fl">0.03</span><span class="op">)</span>, <span class="fl">120</span>, <span class="fl">3</span><span class="op">)</span></span></span>
+<span class="r-in"><span><span class="va">fit</span> <span class="op">&lt;-</span> <span class="fu"><a href="prinsurf.html">prinsurf</a></span><span class="op">(</span><span class="va">X</span>, max.iter <span class="op">=</span> <span class="fl">6</span><span class="op">)</span></span></span>
+<span class="r-in"><span></span></span>
+<span class="r-in"><span><span class="co">## default: each panel is titled with its variable's name</span></span></span>
+<span class="r-in"><span><span class="fu"><a href="https://rdrr.io/r/graphics/plot.default.html" class="external-link">plot</a></span><span class="op">(</span><span class="va">fit</span>, vars <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="st">"x"</span>, <span class="st">"z"</span><span class="op">)</span><span class="op">)</span></span></span>
+<span class="r-plt img"><img src="plot.prinsurf-1.png" alt="" width="700" height="433"></span>
+<span class="r-in"><span></span></span>
+<span class="r-in"><span><span class="co">## your own panel titles, and a title for the figure as a whole</span></span></span>
+<span class="r-in"><span><span class="fu"><a href="https://rdrr.io/r/graphics/plot.default.html" class="external-link">plot</a></span><span class="op">(</span><span class="va">fit</span>, vars <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="st">"x"</span>, <span class="st">"z"</span><span class="op">)</span>,</span></span>
+<span class="r-in"><span>     main <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="st">"First coordinate"</span>, <span class="st">"Third coordinate"</span><span class="op">)</span>,</span></span>
+<span class="r-in"><span>     outer_main <span class="op">=</span> <span class="st">"Principal-surface biplot"</span><span class="op">)</span></span></span>
+<span class="r-plt img"><img src="plot.prinsurf-2.png" alt="" width="700" height="433"></span>
+<span class="r-in"><span></span></span>
+<span class="r-in"><span><span class="co">## a title on a single, contour-free panel</span></span></span>
+<span class="r-in"><span><span class="fu"><a href="https://rdrr.io/r/graphics/plot.default.html" class="external-link">plot</a></span><span class="op">(</span><span class="va">fit</span>, main <span class="op">=</span> <span class="st">"Sample coordinates"</span><span class="op">)</span></span></span>
+<span class="r-plt img"><img src="plot.prinsurf-3.png" alt="" width="700" height="433"></span>
+</code></pre></div>
+    </div>
   </main><aside class="col-md-3"><nav id="toc" aria-label="Table of contents"><h2>On this page</h2>
     </nav></aside></div>
 
