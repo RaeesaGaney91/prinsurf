@@ -1,7 +1,6 @@
 ---
 title: "Principal-surface contour biplots"
 author: "Raeesa Ganey"
-date: "`r Sys.Date()`"
 output: rmarkdown::html_vignette
 vignette: >
   %\VignetteIndexEntry{Principal-surface contour biplots}
